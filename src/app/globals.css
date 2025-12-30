@@ -1,0 +1,276 @@
+@import "tailwindcss";
+
+/* Enable class-based dark mode for Tailwind v4 */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ========================================
+   Theme Variables
+   ======================================== */
+
+:root,
+.light {
+  --background: #ffffff;
+  --foreground: #171717;
+  --card: #ffffff;
+  --card-foreground: #171717;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #f1f5f9;
+  --secondary-foreground: #1e293b;
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+  --accent: #f1f5f9;
+  --accent-foreground: #1e293b;
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #3b82f6;
+  --chat-bg: linear-gradient(to bottom right, #f9fafb, #f1f5f9);
+  --message-user-bg: #f1f5f9;
+  --message-user-border: #e2e8f0;
+  --message-user-text: #1f2937;
+  --flight-card-bg: #ffffff;
+  --flight-card-border: #e5e7eb;
+  --flight-card-hover: #f9fafb;
+}
+
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+  --card: #171717;
+  --card-foreground: #ededed;
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  --secondary: #262626;
+  --secondary-foreground: #ededed;
+  --muted: #262626;
+  --muted-foreground: #a1a1aa;
+  --accent: #262626;
+  --accent-foreground: #ededed;
+  --border: #2e2e2e;
+  --input: #2e2e2e;
+  --ring: #3b82f6;
+  --chat-bg: linear-gradient(to bottom right, #0a0a0a, #171717);
+  --message-user-bg: #1f1f1f;
+  --message-user-border: #2e2e2e;
+  --message-user-text: #ededed;
+  --flight-card-bg: #1a1a1a;
+  --flight-card-border: #2e2e2e;
+  --flight-card-hover: #252525;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* ========================================
+   Custom Scrollbar Styles
+   ======================================== */
+
+/* Default scrollbar - slim and modern */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #c4c4c4 0%, #a8a8a8 100%);
+  border-radius: 10px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #a0a0a0 0%, #888888 100%);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+/* Dark mode scrollbar */
+@media (prefers-color-scheme: dark) {
+  ::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 100%);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(180deg, #5a5a5a 0%, #4a4a4a 100%);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+}
+
+/* Thin scrollbar variant for sidebars and smaller containers */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Hidden scrollbar but still scrollable */
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hidden {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Styled scrollbar for chat area */
+.scrollbar-chat::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-chat::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 10px;
+  margin: 4px 0;
+}
+
+.scrollbar-chat::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 10px;
+}
+
+.scrollbar-chat::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+/* Dark mode scrollbar for chat */
+.dark .scrollbar-chat::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark .scrollbar-chat::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.3);
+}
+
+.dark .scrollbar-chat::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.5);
+}
+
+/* Styled scrollbar for sidebar - dark and subtle */
+.scrollbar-sidebar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.4);
+  border-radius: 10px;
+}
+
+.scrollbar-sidebar::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.6);
+}
+
+/* Styled scrollbar for modals/popups */
+.scrollbar-modal::-webkit-scrollbar {
+  width: 5px;
+}
+
+.scrollbar-modal::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 10px;
+  margin: 8px 0;
+}
+
+.scrollbar-modal::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #a855f7 0%, #7c3aed 100%);
+  border-radius: 10px;
+}
+
+.scrollbar-modal::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #9333ea 0%, #6d28d9 100%);
+}
+
+/* Dark mode scrollbar for modals */
+.dark .scrollbar-modal::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.dark .scrollbar-modal::-webkit-scrollbar-thumb {
+  background: rgba(75, 85, 99, 0.4);
+}
+
+.dark .scrollbar-modal::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 85, 99, 0.6);
+}
+
+/* Auto-hide scrollbar - only show on hover */
+.scrollbar-auto-hide::-webkit-scrollbar-thumb {
+  background: transparent;
+  transition: background 0.3s ease;
+}
+
+.scrollbar-auto-hide:hover::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+}
+
+.scrollbar-auto-hide:hover::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #c4c4c4 transparent;
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db transparent;
+}
+
+.scrollbar-chat {
+  scrollbar-width: thin;
+  scrollbar-color: #3b82f6 #f3f4f6;
+}
+
+.dark .scrollbar-chat {
+  scrollbar-color: rgba(75, 85, 99, 0.3) transparent;
+}
+
+.scrollbar-sidebar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(75, 85, 99, 0.4) transparent;
+}
+
+.scrollbar-modal {
+  scrollbar-width: thin;
+  scrollbar-color: #a855f7 #f9fafb;
+}
+
+.dark .scrollbar-modal {
+  scrollbar-color: rgba(75, 85, 99, 0.4) transparent;
+}
