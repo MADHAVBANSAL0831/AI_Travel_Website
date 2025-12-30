@@ -972,7 +972,7 @@ function generateFallbackFlightResults(origin: string, destination: string): Sea
     });
   }
 
-  return results.sort((a, b) => a.price - b.price);
+  return results.sort((a, b) => (a.price || 0) - (b.price || 0));
 }
 
 function generateMockHotelResults(destination: string): SearchResult[] {
