@@ -1004,7 +1004,7 @@ function generateMockHotelResults(destination: string): SearchResult[] {
     });
   }
 
-  return results.sort((a, b) => a.price - b.price);
+  return results.sort((a, b) => (a.price || 0) - (b.price || 0));
 }
 
 function capitalize(str: string): string {

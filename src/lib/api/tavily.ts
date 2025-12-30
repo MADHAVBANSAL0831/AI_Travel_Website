@@ -101,5 +101,6 @@ class TavilyAPI {
 
 // Export singleton instance
 export const tavilyAPI = new TavilyAPI();
-export { TavilyAPI, TavilySearchResponse, TavilySearchResult };
+export { TavilyAPI };
+export type { TavilySearchResponse, TavilySearchResult };
 

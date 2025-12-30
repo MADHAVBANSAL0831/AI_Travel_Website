@@ -115,8 +115,8 @@ async function handleFlightBooking(
     console.log(`Searching flights: ${originCode} → ${destCode} on ${params.departureDate}`);
     
     const flightData = await amadeusAPI.searchFlights({
-      origin: originCode,
-      destination: destCode,
+      originLocationCode: originCode,
+      destinationLocationCode: destCode,
       departureDate: params.departureDate!,
       adults: params.travelers || 1,
     });

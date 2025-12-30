@@ -65,10 +65,10 @@ export const travelService = {
     // Get hotels in the city
     const hotels = await amadeusAPI.searchHotelsByCity({
       cityCode: params.cityCode,
-    });
+    }) as { data?: { hotelId: string }[] };
 
     // Get offers for the hotels
-    const hotelIds = hotels.data?.slice(0, 20).map((h: any) => h.hotelId) || [];
+    const hotelIds = hotels?.data?.slice(0, 20).map((h) => h.hotelId) || [];
     
     if (hotelIds.length === 0) {
       return { data: [] };

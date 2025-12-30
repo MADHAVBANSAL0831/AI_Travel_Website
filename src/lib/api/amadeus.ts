@@ -33,7 +33,7 @@ class AmadeusAPI {
 
     this.accessToken = response.data.access_token;
     this.tokenExpiry = new Date(Date.now() + response.data.expires_in * 1000);
-    return this.accessToken;
+    return this.accessToken!;
   }
 
   private async request<T>(endpoint: string, params?: Record<string, any>): Promise<T> {

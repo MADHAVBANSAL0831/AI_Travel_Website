@@ -248,7 +248,7 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
                 </div>
                 <div className="text-right">
                   <p className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
-                    ₹{flight.price.toLocaleString()}
+                    ₹{(flight.price || 0).toLocaleString()}
                   </p>
                   <p className="text-xs text-gray-500 dark:text-gray-400">per person</p>
                 </div>
