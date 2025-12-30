@@ -878,10 +878,10 @@ async function searchRealFlights(origin: string, destination: string, requestedD
       departureDate: formattedDate,
       adults: 1,
       max: 5,
-    });
+    }) as { data?: any[]; dictionaries?: { carriers?: Record<string, string> } };
 
-    const flights = response.data || [];
-    const dictionaries = response.dictionaries || {};
+    const flights = response?.data || [];
+    const dictionaries = response?.dictionaries || {};
 
     if (flights.length === 0) {
       console.log("No flights found from Amadeus, using fallback");
