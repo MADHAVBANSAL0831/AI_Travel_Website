@@ -141,7 +141,7 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "makemytrip",
       name: "MakeMyTrip",
-      icon: <Image src="/icons/makemytrip.svg" alt="MakeMyTrip" width={28} height={28} className="rounded" />,
+      icon: <Image src="/icons/makemytrip.ico" alt="MakeMyTrip" width={28} height={28} className="rounded object-contain" unoptimized />,
       iconBg: "bg-white",
       gradient: "bg-gradient-to-r from-red-500 to-rose-600",
       desc: "Most trusted in India",
@@ -150,7 +150,7 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "ixigo",
       name: "ixigo",
-      icon: <Image src="/icons/ixigo.svg" alt="ixigo" width={28} height={28} className="rounded" />,
+      icon: <Image src="/icons/ixigo.ico" alt="ixigo" width={28} height={28} className="rounded object-contain" unoptimized />,
       iconBg: "bg-white",
       gradient: "bg-gradient-to-r from-orange-500 to-amber-600",
       desc: "Price match guarantee",
@@ -159,7 +159,7 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "google",
       name: "Google Flights",
-      icon: <Image src="/icons/google-flights.svg" alt="Google Flights" width={28} height={28} className="rounded" />,
+      icon: <Image src="/icons/google.png" alt="Google Flights" width={28} height={28} className="rounded object-contain" />,
       iconBg: "bg-white",
       gradient: "bg-gradient-to-r from-blue-500 to-blue-700",
       desc: "Compare all options",
@@ -168,7 +168,7 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "skyscanner",
       name: "Skyscanner",
-      icon: <Image src="/icons/skyscanner.svg" alt="Skyscanner" width={28} height={28} className="rounded" />,
+      icon: <Image src="/icons/skyscanner.ico" alt="Skyscanner" width={28} height={28} className="rounded object-contain" unoptimized />,
       iconBg: "bg-white",
       gradient: "bg-gradient-to-r from-cyan-500 to-teal-600",
       desc: "Global flight search",
@@ -177,7 +177,7 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "cleartrip",
       name: "Cleartrip",
-      icon: <Image src="/icons/cleartrip.svg" alt="Cleartrip" width={28} height={28} className="rounded" />,
+      icon: <Image src="/icons/cleartrip.ico" alt="Cleartrip" width={28} height={28} className="rounded object-contain" unoptimized />,
       iconBg: "bg-white",
       gradient: "bg-gradient-to-r from-orange-500 to-red-600",
       desc: "Quick & easy booking",
