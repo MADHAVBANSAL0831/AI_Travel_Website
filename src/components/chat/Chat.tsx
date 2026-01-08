@@ -107,7 +107,9 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
           const newChat = await response.json();
           activeChatId = newChat.id;
           // Save as last opened chat
-          localStorage.setItem(LAST_CHAT_KEY, activeChatId);
+          if (activeChatId) {
+            localStorage.setItem(LAST_CHAT_KEY, activeChatId);
+          }
           // Navigate to the new chat URL (don't await)
           router.push(`/chat/${activeChatId}`);
         }
