@@ -43,14 +43,34 @@ const airlineWebsites: Record<string, string> = {
   "TG": "https://www.thaiairways.com",
 };
 
+// Airline-specific booking URLs with flight number support
+const airlineBookingUrls: Record<string, (origin: string, dest: string, date: string, flightNum: string) => string> = {
+  "AI": (o, d, dt, fn) => `https://www.airindia.com/in/en/book.html?origin=${o}&destination=${d}&departDate=${dt}&flightNumber=${fn}`,
+  "6E": (o, d, dt) => `https://www.goindigo.in/flight-booking.html?origin=${o}&destination=${d}&departDate=${dt}&tripType=O&noOfAdults=1`,
+  "UK": (o, d, dt) => `https://www.airvistara.com/in/en/book?type=flight&origin=${o}&destination=${d}&departDate=${dt}`,
+  "SG": (o, d, dt) => `https://www.spicejet.com/flight-booking?origin=${o}&destination=${d}&departDate=${dt}`,
+  "QP": (o, d, dt) => `https://www.akasaair.com/booking?origin=${o}&destination=${d}&date=${dt}`,
+  "G8": (o, d, dt) => `https://www.goair.in/plan-my-trip/booking?origin=${o}&destination=${d}&date=${dt}`,
+};
+
+// Airline name to code mapping for filtering
+const airlineNameToCode: Record<string, string> = {
+  "Air India": "AI", "IndiGo": "6E", "Vistara": "UK", "SpiceJet": "SG",
+  "GoAir": "G8", "Akasa Air": "QP", "Air India Express": "IX",
+  "Emirates": "EK", "Qatar Airways": "QR", "Singapore Airlines": "SQ",
+};
+
 function getBookingUrl(platform: string, flight: SearchResult): string {
   const details = flight.details;
   const origin = details.originCode || "";
   const destination = details.destinationCode || "";
   const date = details.date || ""; // Format: YYYY-MM-DD
   const airlineCode = details.airlineCode || "";
+  const airlineName = details.airlineName || "";
   const departureCity = details.departureCity || "";
   const arrivalCity = details.arrivalCity || "";
+  const flightNumber = details.flightNumber || "";
+  const departureTime = details.departure || "";
 
   // Parse date components
   const dateParts = date.split("-"); // [YYYY, MM, DD]
@@ -62,28 +82,39 @@ function getBookingUrl(platform: string, flight: SearchResult): string {
   const dateSlash = `${day}/${month}/${year}`;
   // Format: DDMMYYYY
   const dateCompact = `${day}${month}${year}`;
+  // Format: YYMMDD for skyscanner
+  const skyscannerDate = date.replace(/-/g, "").slice(2);
 
   switch (platform) {
     case "google":
-      // Google Flights format
-      return `https://www.google.com/travel/flights/search?tfs=CBwQAhojEgoyMDI2LTAxLTE1agcIARIDJHtvcmn4AXIHCAESAyR7ZGVzdH0aIxIKMjAyNi0wMS0yMGoHCAESAyR7ZGVzdH1yBwgBEgMke29yaWd9&hl=en`.replace('${origin}', origin).replace('${dest}', destination)
-        || `https://www.google.com/search?q=flights+from+${encodeURIComponent(departureCity)}+to+${encodeURIComponent(arrivalCity)}+on+${date}`;
+      // Google Flights with airline filter - search for specific airline
+      return `https://www.google.com/travel/flights?q=flights%20from%20${encodeURIComponent(departureCity)}%20to%20${encodeURIComponent(arrivalCity)}%20on%20${date}%20${encodeURIComponent(airlineName)}`;
+
     case "skyscanner":
-      // Skyscanner: /transport/flights/{from}/{to}/{date}/ - date format: YYMMDD
-      const skyscannerDate = date.replace(/-/g, "").slice(2); // YYMMDD
-      return `https://www.skyscanner.co.in/transport/flights/${origin.toLowerCase()}/${destination.toLowerCase()}/${skyscannerDate}/`;
+      // Skyscanner with airline filter parameter
+      return `https://www.skyscanner.co.in/transport/flights/${origin.toLowerCase()}/${destination.toLowerCase()}/${skyscannerDate}/?adultsv2=1&cabinclass=economy&childrenv2=&preferdirects=false&outboundaltsenabled=false&inboundaltsenabled=false&carrier=${airlineCode}`;
+
     case "makemytrip":
-      // MakeMyTrip format: itinerary=DEL-BOM-15/01/2026
-      return `https://www.makemytrip.com/flight/search?itinerary=${origin}-${destination}-${dateSlash}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E`;
+      // MakeMyTrip - add airline preference in search
+      return `https://www.makemytrip.com/flight/search?itinerary=${origin}-${destination}-${dateSlash}&tripType=O&paxType=A-1_C-0_I-0&intl=false&cabinClass=E&ccde=IN&lang=eng&airlines=${airlineCode}`;
+
     case "cleartrip":
-      // Cleartrip uses a different URL structure - let's use their search
-      return `https://www.cleartrip.com/flights/${departureCity.toLowerCase().replace(/\s+/g, '-')}-${origin.toLowerCase()}-to-${arrivalCity.toLowerCase().replace(/\s+/g, '-')}-${destination.toLowerCase()}-${dateSlash.replace(/\//g, '-')}`;
+      // Cleartrip with airline filter
+      return `https://www.cleartrip.com/flights/results?from=${origin}&to=${destination}&depart_date=${date}&adults=1&childs=0&infants=0&class=Economy&airline=${airlineCode}&sd=${departureTime}`;
+
     case "ixigo":
-      // Ixigo format
-      return `https://www.ixigo.com/search/result/flight?from=${origin}&to=${destination}&date=${dateCompact}&adults=1&children=0&infants=0&class=e&source=Search%20Form`;
+      // ixigo with airline code filter
+      return `https://www.ixigo.com/search/result/flight?from=${origin}&to=${destination}&date=${dateCompact}&adults=1&children=0&infants=0&class=e&airlines=${airlineCode}`;
+
     case "airline":
-      const airlineUrl = airlineWebsites[airlineCode] || `https://www.google.com/search?q=${encodeURIComponent(details.airlineName + " book flight " + departureCity + " to " + arrivalCity)}`;
-      return airlineUrl;
+      // Direct airline website with specific route and date
+      const airlineBookingFn = airlineBookingUrls[airlineCode];
+      if (airlineBookingFn) {
+        return airlineBookingFn(origin, destination, date, flightNumber.split(" ")[1] || "");
+      }
+      // Fallback: Google search for specific flight
+      return `https://www.google.com/search?q=${encodeURIComponent(`${airlineName} ${flightNumber} ${departureCity} to ${arrivalCity} ${date} book`)}`;
+
     default:
       return "#";
   }

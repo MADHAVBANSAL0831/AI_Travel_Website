@@ -10,6 +10,8 @@ interface ChatLayoutProps {
   currentChatId?: string | null;
 }
 
+const LAST_CHAT_KEY = "travelhub_last_chat_id";
+
 export function ChatLayout({ children, currentChatId }: ChatLayoutProps) {
   const router = useRouter();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -18,12 +20,21 @@ export function ChatLayout({ children, currentChatId }: ChatLayoutProps) {
   const handleNewChat = useCallback(async () => {
     const newChat = await createChat();
     if (newChat) {
+      // Save as last opened chat
+      localStorage.setItem(LAST_CHAT_KEY, newChat.id);
       router.push(`/chat/${newChat.id}`);
     }
   }, [createChat, router]);
 
   const handleDeleteChat = useCallback(async (chatId: string) => {
     await deleteChat(chatId);
+
+    // Clear from localStorage if this was the last chat
+    const lastChatId = localStorage.getItem(LAST_CHAT_KEY);
+    if (lastChatId === chatId) {
+      localStorage.removeItem(LAST_CHAT_KEY);
+    }
+
     // If we deleted the current chat, go to home
     if (chatId === currentChatId) {
       router.push("/");

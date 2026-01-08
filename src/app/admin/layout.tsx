@@ -5,23 +5,21 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Hotel,
-  Plane,
-  Calendar,
   Users,
   CreditCard,
   Settings,
   LogOut,
+  Brain,
+  MessageSquare,
+  Compass,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const sidebarItems = [
   { name: "Dashboard", href: "/admin", icon: LayoutDashboard },
-  { name: "Hotels", href: "/admin/hotels", icon: Hotel },
-  { name: "Flights", href: "/admin/flights", icon: Plane },
-  { name: "Bookings", href: "/admin/bookings", icon: Calendar },
   { name: "Customers", href: "/admin/customers", icon: Users },
   { name: "Payments", href: "/admin/payments", icon: CreditCard },
+  { name: "Knowledge Base", href: "/admin/knowledge", icon: Brain },
   { name: "Settings", href: "/admin/settings", icon: Settings },
 ];
 
@@ -38,7 +36,7 @@ export default function AdminLayout({
       <aside className="w-64 bg-gray-900 text-white flex flex-col">
         <div className="p-6">
           <h1 className="text-xl font-bold flex items-center gap-2">
-            <Plane className="h-6 w-6" />
+            <Compass className="h-6 w-6" />
             TravelHub Admin
           </h1>
         </div>
@@ -67,7 +65,14 @@ export default function AdminLayout({
           </ul>
         </nav>
 
-        <div className="p-4 border-t border-gray-800">
+        <div className="p-4 border-t border-gray-800 space-y-2">
+          <Link
+            href="/"
+            className="flex items-center gap-3 px-4 py-3 w-full text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 rounded-lg transition-colors"
+          >
+            <MessageSquare className="h-5 w-5" />
+            Back to Chat
+          </Link>
           <button className="flex items-center gap-3 px-4 py-3 w-full text-gray-300 hover:bg-gray-800 hover:text-white rounded-lg transition-colors">
             <LogOut className="h-5 w-5" />
             Sign Out

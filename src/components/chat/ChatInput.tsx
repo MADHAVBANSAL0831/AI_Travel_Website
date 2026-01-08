@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useRef, useEffect, KeyboardEvent } from "react";
-import { Send, Loader2, Mic, Paperclip, StopCircle } from "lucide-react";
+import { Send, Loader2, Mic, Paperclip, Square } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 interface ChatInputProps {
   onSendMessage: (message: string) => void;
+  onStop?: () => void;
   isLoading?: boolean;
   disabled?: boolean;
   placeholder?: string;
@@ -14,6 +15,7 @@ interface ChatInputProps {
 
 export function ChatInput({
   onSendMessage,
+  onStop,
   isLoading = false,
   disabled = false,
   placeholder = "Tell me about your travel plans...",
@@ -30,13 +32,24 @@ export function ChatInput({
     }
   }, [inputValue]);
 
+  // Refocus textarea when loading finishes
+  useEffect(() => {
+    if (!isLoading && textareaRef.current) {
+      textareaRef.current.focus();
+    }
+  }, [isLoading]);
+
   const handleSubmit = () => {
     if (!inputValue.trim() || isLoading || disabled) return;
     onSendMessage(inputValue.trim());
     setInputValue("");
-    // Reset textarea height
+    // Reset textarea height and refocus
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
+      // Refocus after a brief delay to ensure state updates
+      setTimeout(() => {
+        textareaRef.current?.focus();
+      }, 10);
     }
   };
 
@@ -98,13 +111,10 @@ export function ChatInput({
               <Button
                 type="button"
                 size="icon"
-                variant="destructive"
-                className="rounded-xl h-10 w-10"
-                onClick={() => {
-                  // TODO: Implement stop functionality
-                }}
+                onClick={onStop}
+                className="rounded-xl h-10 w-10 bg-red-700 hover:bg-red-800 dark:bg-red-800 dark:hover:bg-red-900 text-white"
               >
-                <StopCircle className="h-5 w-5" />
+                <Square className="h-4 w-4 fill-current" />
               </Button>
             ) : (
               <Button

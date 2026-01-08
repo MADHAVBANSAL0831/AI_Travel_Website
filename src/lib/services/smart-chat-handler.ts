@@ -461,24 +461,36 @@ function getAirlineName(code: string): string {
 // Transform Amadeus results
 function transformFlightResults(data: any, params: ExtractedParams): SearchResultItem[] {
   const offers = data?.data || [];
+  const originCode = getIATACode(params.origin || "");
+  const destCode = getIATACode(params.destination || "");
 
   return offers.slice(0, 5).map((offer: any, index: number) => {
     const firstSeg = offer.itineraries?.[0]?.segments?.[0];
     const lastSeg = offer.itineraries?.[0]?.segments?.slice(-1)[0];
     const segments = offer.itineraries?.[0]?.segments || [];
+    const carrierCode = firstSeg?.carrierCode || "AI";
+    const airlineName = getAirlineName(carrierCode);
 
     return {
       type: "flight" as const,
       id: offer.id || `flight-${index}`,
-      title: `${params.origin?.toUpperCase()} → ${params.destination?.toUpperCase()}`,
-      subtitle: getAirlineName(firstSeg?.carrierCode || "XX"),
+      title: `${capitalize(params.origin || "")} → ${capitalize(params.destination || "")}`,
+      subtitle: airlineName,
       price: Math.round(parseFloat(offer.price?.total || 0) * 85),
       details: {
         departure: firstSeg?.departure?.at?.split("T")[1]?.slice(0, 5) || "N/A",
         arrival: lastSeg?.arrival?.at?.split("T")[1]?.slice(0, 5) || "N/A",
         duration: offer.itineraries?.[0]?.duration?.replace("PT", "").toLowerCase() || "N/A",
         stops: segments.length === 1 ? "Non-stop" : `${segments.length - 1} stop(s)`,
-        flightNumber: `${firstSeg?.carrierCode || "XX"} ${firstSeg?.number || "000"}`,
+        flightNumber: `${carrierCode} ${firstSeg?.number || "000"}`,
+        // Booking URL fields
+        originCode: originCode,
+        destinationCode: destCode,
+        departureCity: capitalize(params.origin || ""),
+        arrivalCity: capitalize(params.destination || ""),
+        date: params.departureDate || "",
+        airlineCode: carrierCode,
+        airlineName: airlineName,
       },
     };
   });
@@ -492,6 +504,9 @@ function generateFallbackFlights(params: ExtractedParams): SearchResultItem[] {
     { airline: "SpiceJet", code: "SG", price: 5999, time: { dep: "18:30", arr: "21:15" } },
   ];
 
+  const originCode = getIATACode(params.origin || "");
+  const destCode = getIATACode(params.destination || "");
+
   return data.map((f, i) => ({
     type: "flight" as const,
     id: `flight-${i}`,
@@ -504,6 +519,14 @@ function generateFallbackFlights(params: ExtractedParams): SearchResultItem[] {
       duration: "2h 45m",
       stops: i % 2 === 0 ? "Non-stop" : "1 stop",
       flightNumber: `${f.code} ${1000 + i * 100}`,
+      // Booking URL fields
+      originCode: originCode,
+      destinationCode: destCode,
+      departureCity: capitalize(params.origin || ""),
+      arrivalCity: capitalize(params.destination || ""),
+      date: params.departureDate || "",
+      airlineCode: f.code,
+      airlineName: f.airline,
     },
   }));
 }

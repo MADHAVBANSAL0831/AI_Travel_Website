@@ -1,12 +1,15 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bot, User, Plane, Hotel, ArrowRight, Loader2, Copy, Check, ThumbsUp, ThumbsDown, ExternalLink } from "lucide-react";
+import { Bot, User, Plane, Hotel, ArrowRight, Loader2, Copy, Check, ThumbsUp, ThumbsDown, ExternalLink, ChevronDown, ChevronLeft, ChevronRight, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Message, SearchResult } from "@/lib/types/chat";
 import { cn } from "@/lib/utils";
 import { BookingModal } from "./BookingModal";
+import ReactMarkdown from "react-markdown";
+
+type SortOption = "recommended" | "price_low" | "price_high" | "duration";
 
 interface MessagesProps {
   messages: Message[];
@@ -65,7 +68,8 @@ function MessageBubble({ message, index, onBookFlight }: { message: Message; ind
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
-      transition={{ duration: 0.2, delay: index * 0.05 }}
+      transition={{ duration: 0.15 }}
+      layout={false}
       className={cn("flex gap-4 group", isUser ? "justify-end" : "justify-start")}
     >
       {/* Assistant Avatar - only for non-user messages */}
@@ -89,10 +93,28 @@ function MessageBubble({ message, index, onBookFlight }: { message: Message; ind
             </div>
           </div>
         ) : (
-          /* Assistant message styling */
+          /* Assistant message styling with markdown */
           <div className="inline-block">
-            <div className="text-gray-800 dark:text-gray-200">
-              <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{message.content}</p>
+            <div className="text-gray-800 dark:text-gray-200 text-[15px] leading-relaxed markdown-content">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc pl-5 mb-2 space-y-0.5">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal pl-5 mb-2 space-y-0.5">{children}</ol>,
+                  li: ({ children }) => <li className="pl-1">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold text-gray-900 dark:text-gray-100">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  h1: ({ children }) => <h1 className="text-lg font-bold mt-3 mb-1">{children}</h1>,
+                  h2: ({ children }) => <h2 className="text-base font-bold mt-2 mb-1">{children}</h2>,
+                  h3: ({ children }) => <h3 className="font-bold mt-2 mb-1">{children}</h3>,
+                  code: ({ children }) => <code className="bg-gray-100 dark:bg-gray-700 px-1.5 py-0.5 rounded text-sm font-mono">{children}</code>,
+                  pre: ({ children }) => <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-lg overflow-x-auto my-2">{children}</pre>,
+                  a: ({ href, children }) => <a href={href} target="_blank" rel="noopener noreferrer" className="text-blue-600 dark:text-blue-400 hover:underline">{children}</a>,
+                  blockquote: ({ children }) => <blockquote className="border-l-4 border-gray-300 dark:border-gray-600 pl-4 italic my-2">{children}</blockquote>,
+                }}
+              >
+                {message.content}
+              </ReactMarkdown>
             </div>
             <div className="flex items-center gap-3 mt-2">
               <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -124,13 +146,9 @@ function MessageBubble({ message, index, onBookFlight }: { message: Message; ind
           </div>
         )}
 
-        {/* Search Results */}
+        {/* Search Results with Filtering and Load More */}
         {message.search_results && message.search_results.length > 0 && (
-          <div className="mt-4 space-y-3">
-            {message.search_results.map((result) => (
-              <SearchResultCard key={result.id} result={result} onBook={onBookFlight} />
-            ))}
-          </div>
+          <SearchResultsContainer results={message.search_results} onBook={onBookFlight} />
         )}
       </div>
 
@@ -141,6 +159,184 @@ function MessageBubble({ message, index, onBookFlight }: { message: Message; ind
         </div>
       )}
     </motion.div>
+  );
+}
+
+function SearchResultsContainer({ results, onBook }: { results: SearchResult[]; onBook: (flight: SearchResult) => void }) {
+  const [sortBy, setSortBy] = useState<SortOption>("price_low"); // Default to lowest price
+  const [currentPage, setCurrentPage] = useState(0);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const ITEMS_PER_PAGE = 5;
+
+  // Separate flights/hotels from info cards
+  const bookableResults = results.filter(r => r.type === "flight" || r.type === "hotel");
+  const infoResults = results.filter(r => r.type === "info");
+
+  // Sort the bookable results
+  const sortedResults = useMemo(() => {
+    const sorted = [...bookableResults];
+    switch (sortBy) {
+      case "price_low":
+        return sorted.sort((a, b) => (a.price || 0) - (b.price || 0));
+      case "price_high":
+        return sorted.sort((a, b) => (b.price || 0) - (a.price || 0));
+      case "duration":
+        return sorted.sort((a, b) => {
+          const durationA = a.details?.duration || "99H";
+          const durationB = b.details?.duration || "99H";
+          return durationA.localeCompare(durationB);
+        });
+      case "recommended":
+      default:
+        return sorted;
+    }
+  }, [bookableResults, sortBy]);
+
+  // Pagination
+  const totalPages = Math.ceil(sortedResults.length / ITEMS_PER_PAGE);
+  const startIndex = currentPage * ITEMS_PER_PAGE;
+  const visibleResults = sortedResults.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const goToPage = (page: number) => {
+    if (page >= 0 && page < totalPages) {
+      setCurrentPage(page);
+    }
+  };
+
+  const sortOptions: { value: SortOption; label: string }[] = [
+    { value: "price_low", label: "Lowest Price" },
+    { value: "price_high", label: "Highest Price" },
+    { value: "duration", label: "Shortest Duration" },
+    { value: "recommended", label: "Recommended" },
+  ];
+
+  return (
+    <div className="mt-4 space-y-3">
+      {/* Filter/Sort Dropdown - only show if there are bookable results */}
+      {bookableResults.length > 1 && (
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs text-gray-500 dark:text-gray-400">
+            {bookableResults.length} {bookableResults[0]?.type === "flight" ? "flights" : "hotels"} found
+          </span>
+
+          <div className="relative">
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="flex items-center gap-2 px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-lg transition-colors"
+            >
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              {sortOptions.find(o => o.value === sortBy)?.label}
+              <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isDropdownOpen && "rotate-180")} />
+            </button>
+
+            {isDropdownOpen && (
+              <div className="absolute right-0 top-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg z-10 min-w-[160px] overflow-hidden">
+                {sortOptions.map((option) => (
+                  <button
+                    key={option.value}
+                    onClick={() => {
+                      setSortBy(option.value);
+                      setCurrentPage(0); // Reset to first page on sort change
+                      setIsDropdownOpen(false);
+                    }}
+                    className={cn(
+                      "w-full text-left px-3 py-2 text-xs hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors",
+                      sortBy === option.value && "bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400"
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Bookable Results (Flights/Hotels) with pagination */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={currentPage}
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -20 }}
+          transition={{ duration: 0.2 }}
+          className="space-y-3"
+        >
+          {visibleResults.map((result, index) => (
+            <SearchResultCard key={result.id} result={result} onBook={onBook} />
+          ))}
+        </motion.div>
+      </AnimatePresence>
+
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          {/* Previous Button */}
+          <button
+            onClick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 0}
+            className={cn(
+              "p-2 rounded-lg transition-all",
+              currentPage === 0
+                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
+            )}
+            aria-label="Previous page"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          {/* Page Indicators */}
+          <div className="flex items-center gap-1.5">
+            {Array.from({ length: totalPages }, (_, i) => (
+              <button
+                key={i}
+                onClick={() => goToPage(i)}
+                className={cn(
+                  "w-2 h-2 rounded-full transition-all",
+                  currentPage === i
+                    ? "bg-blue-600 dark:bg-blue-500 w-6"
+                    : "bg-gray-300 dark:bg-gray-600 hover:bg-gray-400 dark:hover:bg-gray-500"
+                )}
+                aria-label={`Page ${i + 1}`}
+              />
+            ))}
+          </div>
+
+          {/* Next Button */}
+          <button
+            onClick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages - 1}
+            className={cn(
+              "p-2 rounded-lg transition-all",
+              currentPage === totalPages - 1
+                ? "text-gray-300 dark:text-gray-600 cursor-not-allowed"
+                : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-blue-600 dark:hover:text-blue-400"
+            )}
+            aria-label="Next page"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      )}
+
+      {/* Page number text */}
+      {totalPages > 1 && (
+        <p className="text-center text-xs text-gray-500 dark:text-gray-400">
+          Page {currentPage + 1} of {totalPages}
+        </p>
+      )}
+
+      {/* Info Results (Web Search) - Always show all */}
+      {infoResults.length > 0 && (
+        <div className="mt-4 space-y-3">
+          {infoResults.map((result) => (
+            <SearchResultCard key={result.id} result={result} onBook={onBook} />
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

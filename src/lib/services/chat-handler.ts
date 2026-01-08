@@ -450,6 +450,8 @@ async function searchWeb(query: string, destination: string): Promise<{ answer?:
 // Transform Amadeus flight results
 function transformFlightResults(data: any, params: ExtractedParams): SearchResultItem[] {
   const offers = data?.data || [];
+  const originCode = cityToIATA[params.origin?.toLowerCase() || ""] || params.origin?.toUpperCase() || "";
+  const destCode = cityToIATA[params.destination?.toLowerCase() || ""] || params.destination?.toUpperCase() || "";
 
   return offers.slice(0, 5).map((offer: any, index: number) => {
     const firstSegment = offer.itineraries?.[0]?.segments?.[0];
@@ -458,8 +460,9 @@ function transformFlightResults(data: any, params: ExtractedParams): SearchResul
 
     const departure = firstSegment?.departure?.at?.split("T")[1]?.slice(0, 5) || "N/A";
     const arrival = lastSegment?.arrival?.at?.split("T")[1]?.slice(0, 5) || "N/A";
-    const carrier = firstSegment?.carrierCode || "XX";
+    const carrier = firstSegment?.carrierCode || "AI";
     const flightNum = firstSegment?.number || "000";
+    const airlineName = getAirlineName(carrier);
 
     // Calculate duration
     const duration = offer.itineraries?.[0]?.duration?.replace("PT", "").toLowerCase() || "N/A";
@@ -468,8 +471,8 @@ function transformFlightResults(data: any, params: ExtractedParams): SearchResul
     return {
       type: "flight" as const,
       id: offer.id || `flight-${index}`,
-      title: `${params.origin?.toUpperCase()} → ${params.destination?.toUpperCase()}`,
-      subtitle: getAirlineName(carrier),
+      title: `${capitalize(params.origin || "")} → ${capitalize(params.destination || "")}`,
+      subtitle: airlineName,
       price: Math.round(parseFloat(offer.price?.total || 0) * 85), // Convert to INR
       details: {
         departure,
@@ -477,8 +480,14 @@ function transformFlightResults(data: any, params: ExtractedParams): SearchResul
         duration: duration.replace("h", "h ").replace("m", "m"),
         stops: stops === 0 ? "Non-stop" : `${stops} stop(s)`,
         flightNumber: `${carrier} ${flightNum}`,
-        origin: firstSegment?.departure?.iataCode || "",
-        destination: lastSegment?.arrival?.iataCode || "",
+        // Booking URL fields
+        originCode: originCode,
+        destinationCode: destCode,
+        departureCity: capitalize(params.origin || ""),
+        arrivalCity: capitalize(params.destination || ""),
+        date: params.departureDate || "",
+        airlineCode: carrier,
+        airlineName: airlineName,
       },
     };
   });
@@ -497,6 +506,13 @@ function getAirlineName(code: string): string {
 
 // Generate fallback flight results
 function generateFallbackFlights(params: ExtractedParams): SearchResultItem[] {
+  const airlines = [
+    { name: "Air India", code: "AI" },
+    { name: "IndiGo", code: "6E" },
+    { name: "Vistara", code: "UK" },
+    { name: "SpiceJet", code: "SG" },
+    { name: "Akasa Air", code: "QP" },
+  ];
   const prices = [9055, 9313, 10798, 12500, 14200];
   const times = [
     { dep: "06:15", arr: "09:20" },
@@ -506,18 +522,29 @@ function generateFallbackFlights(params: ExtractedParams): SearchResultItem[] {
     { dep: "21:00", arr: "00:15" },
   ];
 
+  const originCode = cityToIATA[params.origin?.toLowerCase() || ""] || params.origin?.toUpperCase() || "DEL";
+  const destCode = cityToIATA[params.destination?.toLowerCase() || ""] || params.destination?.toUpperCase() || "BLR";
+
   return prices.map((price, i) => ({
     type: "flight" as const,
     id: `fallback-flight-${i}`,
-    title: `${capitalize(params.origin || "DEL")} → ${capitalize(params.destination || "BLR")}`,
-    subtitle: ["Air India", "IndiGo", "Vistara", "SpiceJet", "Akasa Air"][i],
+    title: `${capitalize(params.origin || "Delhi")} → ${capitalize(params.destination || "Bangalore")}`,
+    subtitle: airlines[i].name,
     price,
     details: {
       departure: times[i].dep,
       arrival: times[i].arr,
       duration: "2h 30m",
       stops: i % 2 === 0 ? "Non-stop" : "1 stop",
-      flightNumber: `${["AI", "6E", "UK", "SG", "QP"][i]} ${1000 + i * 123}`,
+      flightNumber: `${airlines[i].code} ${1000 + i * 123}`,
+      // Booking URL fields
+      originCode: originCode,
+      destinationCode: destCode,
+      departureCity: capitalize(params.origin || "Delhi"),
+      arrivalCity: capitalize(params.destination || "Bangalore"),
+      date: params.departureDate || "",
+      airlineCode: airlines[i].code,
+      airlineName: airlines[i].name,
     },
   }));
 }

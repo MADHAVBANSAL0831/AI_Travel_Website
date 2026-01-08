@@ -20,12 +20,31 @@ interface ChatProps {
   initialMessages?: Message[];
 }
 
+const LAST_CHAT_KEY = "travelhub_last_chat_id";
+
 export function Chat({ chatId, initialMessages = [] }: ChatProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
   const previousChatIdRef = useRef<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  // Stop generation handler
+  const handleStopGeneration = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+  }, []);
+
+  // Save last opened chat to localStorage
+  useEffect(() => {
+    if (chatId) {
+      localStorage.setItem(LAST_CHAT_KEY, chatId);
+    }
+  }, [chatId]);
 
   // Load messages when chatId changes or on mount
   useEffect(() => {
@@ -63,6 +82,19 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
 
     let activeChatId = chatId;
 
+    // Add user message immediately for instant feedback
+    const userMessage: Message = {
+      id: uuidv4(),
+      chat_id: activeChatId || "temp",
+      role: "user",
+      content: content.trim(),
+      created_at: new Date().toISOString(),
+    };
+
+    // Show message immediately
+    setMessages((prev) => [...prev, userMessage]);
+    setIsLoading(true);
+
     // Create a new chat if we don't have one
     if (!activeChatId) {
       try {
@@ -74,47 +106,45 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
         if (response.ok) {
           const newChat = await response.json();
           activeChatId = newChat.id;
-          // Navigate to the new chat URL
+          // Save as last opened chat
+          localStorage.setItem(LAST_CHAT_KEY, activeChatId);
+          // Navigate to the new chat URL (don't await)
           router.push(`/chat/${activeChatId}`);
         }
       } catch (error) {
         console.error("Failed to create chat:", error);
+        setIsLoading(false);
         return;
       }
     }
 
-    // Add user message
-    const userMessage: Message = {
-      id: uuidv4(),
-      chat_id: activeChatId!,
-      role: "user",
-      content: content.trim(),
-      created_at: new Date().toISOString(),
-    };
-
-    setMessages((prev) => [...prev, userMessage]);
-    setIsLoading(true);
-
     try {
-      // Save user message
-      await fetch(`/api/chats/${activeChatId}/messages`, {
+      // Get current messages for history (use functional update pattern)
+      const currentMessages = messages;
+
+      // Save user message in background (don't await)
+      fetch(`/api/chats/${activeChatId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ role: "user", content: content.trim() }),
-      });
+      }).catch(console.error);
 
-      // Get AI response using v2 API (LLM-based intent classification)
-      const response = await fetch("/api/chat/v2", {
+      // Create abort controller for this request
+      abortControllerRef.current = new AbortController();
+
+      // Get AI response using v3 API (LangChain Agent with RAG)
+      const response = await fetch("/api/chat/v3", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           message: content,
           conversationId: activeChatId,
-          history: messages.map((m) => ({
+          history: currentMessages.slice(-10).map((m) => ({
             role: m.role,
             content: m.content,
           })),
         }),
+        signal: abortControllerRef.current.signal,
       });
 
       const data = await response.json();
@@ -130,8 +160,8 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
 
       setMessages((prev) => [...prev, assistantMessage]);
 
-      // Save assistant message
-      await fetch(`/api/chats/${activeChatId}/messages`, {
+      // Save assistant message in background (don't await)
+      fetch(`/api/chats/${activeChatId}/messages`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -139,17 +169,23 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
           content: assistantMessage.content,
           search_results: data.searchResults,
         }),
-      });
+      }).catch(console.error);
 
-      // Update chat title if it's the first message
-      if (messages.length === 0) {
-        await fetch(`/api/chats/${activeChatId}`, {
+      // Update chat title if it's the first message (in background)
+      if (currentMessages.length === 0) {
+        fetch(`/api/chats/${activeChatId}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ title: content.slice(0, 50) }),
-        });
+        }).catch(console.error);
       }
     } catch (error) {
+      // Don't show error message if request was aborted by user
+      if (error instanceof Error && error.name === 'AbortError') {
+        console.log("Request aborted by user");
+        return;
+      }
+
       console.error("Chat error:", error);
       const errorMessage: Message = {
         id: uuidv4(),
@@ -160,6 +196,7 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
       };
       setMessages((prev) => [...prev, errorMessage]);
     } finally {
+      abortControllerRef.current = null;
       setIsLoading(false);
     }
   }, [chatId, isLoading, messages, router]);
@@ -284,7 +321,7 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
       ) : (
         <Messages messages={messages} isLoading={isLoading} />
       )}
-      <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
+      <ChatInput onSendMessage={handleSendMessage} onStop={handleStopGeneration} isLoading={isLoading} />
     </div>
   );
 }

@@ -20,7 +20,6 @@ import {
   ChevronUp,
   Sun,
   Moon,
-  Monitor,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Chat, GroupedChats } from "@/lib/types/chat";
@@ -184,7 +183,7 @@ function ChatGroups({
   ];
 
   return (
-    <div className="space-y-4 py-2">
+    <div className="space-y-2 py-1">
       {sections.map(({ label, chats }) =>
         chats.length > 0 && (
           <ChatSection
@@ -213,13 +212,14 @@ function ChatSection({
   return (
     <div>
       {label && (
-        <div className="flex items-center gap-2 px-3 py-2">
-          <div className="h-px flex-1 bg-gradient-to-r from-gray-700 to-transparent" />
-          <span className="text-[10px] uppercase tracking-wider text-gray-500 font-semibold">{label}</span>
-          <div className="h-px flex-1 bg-gradient-to-l from-gray-700 to-transparent" />
+        <div className="flex items-center gap-3 px-3 py-1.5 mt-1">
+          <span className="text-[10px] uppercase tracking-widest text-gray-400 font-medium">
+            {label}
+          </span>
+          <div className="h-px flex-1 bg-gradient-to-r from-gray-700/50 to-transparent" />
         </div>
       )}
-      <div className="space-y-1">
+      <div className="space-y-0.5">
         {chats.map((chat) => (
           <ChatItem
             key={chat.id}
@@ -261,20 +261,20 @@ function ChatItem({
       <Link href={`/chat/${chat.id}`}>
         <div
           className={cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-all duration-200",
+            "flex items-start gap-2 px-3 py-1.5 rounded-xl cursor-pointer transition-colors duration-300 ease-out",
             isActive
-              ? "bg-gradient-to-r from-gray-700/80 to-gray-700/40 shadow-lg shadow-black/10"
-              : "hover:bg-gray-800/60"
+              ? "bg-gray-700/50"
+              : "bg-transparent hover:bg-gray-800/35"
           )}
         >
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 min-w-0 pt-0.5">
             <span className={cn(
               "text-sm truncate block transition-colors leading-tight",
               isActive ? "text-white font-medium" : "text-gray-300"
             )}>
               {chat.title}
             </span>
-            <span className="text-[10px] text-gray-500 truncate block mt-0.5">
+            <span className="text-[9px] text-gray-500 truncate block leading-tight mt-0.5">
               {new Date(chat.created_at).toLocaleDateString(undefined, {
                 month: 'short',
                 day: 'numeric',
@@ -292,7 +292,7 @@ function ChatItem({
               setShowMenu(!showMenu);
             }}
             className={cn(
-              "p-1.5 rounded-lg transition-all duration-200 flex-shrink-0",
+              "p-1 rounded-lg transition-all duration-200 flex-shrink-0",
               isActive
                 ? "opacity-100"
                 : "opacity-0 group-hover:opacity-100",
@@ -367,11 +367,11 @@ function ChatItem({
 
 function ChatListSkeleton({ isCollapsed }: { isCollapsed: boolean }) {
   return (
-    <div className="space-y-2 py-2">
+    <div className="space-y-0.5 py-1">
       {[1, 2, 3, 4, 5].map((i) => (
-        <div key={i} className="flex items-center gap-3 px-3 py-2.5">
+        <div key={i} className="flex items-center gap-3 px-3 py-1.5">
           {!isCollapsed && (
-            <div className="flex-1 space-y-1.5">
+            <div className="flex-1 space-y-1">
               <div
                 className="h-3.5 bg-gray-800 rounded animate-pulse"
                 style={{ width: `${70 + i * 10}%` }}
@@ -388,36 +388,27 @@ function ChatListSkeleton({ isCollapsed }: { isCollapsed: boolean }) {
   );
 }
 
-function ThemeSelector() {
+function ThemeToggle() {
   const { theme, setTheme } = useTheme();
 
-  const themes = [
-    { value: "light" as const, label: "Light", icon: Sun },
-    { value: "dark" as const, label: "Dark", icon: Moon },
-    { value: "system" as const, label: "System", icon: Monitor },
-  ];
+  const isDark = theme === "dark" || (theme === "system" && typeof window !== "undefined" && window.matchMedia("(prefers-color-scheme: dark)").matches);
+
+  const toggleTheme = () => {
+    setTheme(isDark ? "light" : "dark");
+  };
 
   return (
-    <div className="p-2">
-      <p className="text-xs text-gray-500 px-1 mb-2">Theme</p>
-      <div className="flex gap-1 bg-gray-900/50 rounded-lg p-1">
-        {themes.map(({ value, label, icon: Icon }) => (
-          <button
-            key={value}
-            onClick={() => setTheme(value)}
-            className={cn(
-              "flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 rounded-md text-xs font-medium transition-all",
-              theme === value
-                ? "bg-gray-700 text-white shadow-sm"
-                : "text-gray-400 hover:text-gray-300 hover:bg-gray-800/50"
-            )}
-          >
-            <Icon className="h-3.5 w-3.5" />
-            <span>{label}</span>
-          </button>
-        ))}
-      </div>
-    </div>
+    <button
+      onClick={toggleTheme}
+      className="flex items-center gap-3 w-full px-3 py-2.5 text-sm text-gray-300 hover:bg-gray-700 hover:text-white transition-colors"
+    >
+      {isDark ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
+      <span>{isDark ? "Light Mode" : "Dark Mode"}</span>
+    </button>
   );
 }
 
@@ -512,10 +503,8 @@ function UserMenu({ isCollapsed }: { isCollapsed: boolean }) {
             <p className="text-xs text-gray-400 truncate">{user?.email}</p>
           </div>
 
-          {/* Theme Selector */}
-          <ThemeSelector />
-
-          <div className="border-t border-gray-700" />
+          {/* Theme Toggle */}
+          <ThemeToggle />
 
           <Link
             href="/admin"
