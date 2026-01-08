@@ -3,6 +3,7 @@
 import { X, Plane, ExternalLink, Clock, Calendar, Users, Sparkles, ArrowRight, Shield, Tag } from "lucide-react";
 import { SearchResult } from "@/lib/types/chat";
 import { motion, AnimatePresence } from "framer-motion";
+import Image from "next/image";
 
 interface BookingModalProps {
   isOpen: boolean;
@@ -131,7 +132,8 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "airline",
       name: details.airlineName || "Airline Website",
-      icon: <Plane className="h-5 w-5" />,
+      icon: <Plane className="h-5 w-5 text-white" />,
+      iconBg: "bg-white/20",
       gradient: "bg-gradient-to-r from-blue-600 to-blue-700",
       desc: "Best for frequent flyers",
       badge: "Direct"
@@ -139,7 +141,8 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "makemytrip",
       name: "MakeMyTrip",
-      icon: <span className="text-lg">🧳</span>,
+      icon: <Image src="/icons/makemytrip.svg" alt="MakeMyTrip" width={28} height={28} className="rounded" />,
+      iconBg: "bg-white",
       gradient: "bg-gradient-to-r from-red-500 to-rose-600",
       desc: "Most trusted in India",
       badge: "Popular"
@@ -147,7 +150,8 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "ixigo",
       name: "ixigo",
-      icon: <span className="text-lg">🎯</span>,
+      icon: <Image src="/icons/ixigo.svg" alt="ixigo" width={28} height={28} className="rounded" />,
+      iconBg: "bg-white",
       gradient: "bg-gradient-to-r from-orange-500 to-amber-600",
       desc: "Price match guarantee",
       badge: null
@@ -155,17 +159,28 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
     {
       id: "google",
       name: "Google Flights",
-      icon: <span className="text-lg">🔍</span>,
-      gradient: "bg-gradient-to-r from-gray-700 to-gray-900",
+      icon: <Image src="/icons/google-flights.svg" alt="Google Flights" width={28} height={28} className="rounded" />,
+      iconBg: "bg-white",
+      gradient: "bg-gradient-to-r from-blue-500 to-blue-700",
       desc: "Compare all options",
       badge: null
     },
     {
       id: "skyscanner",
       name: "Skyscanner",
-      icon: <span className="text-lg">🌐</span>,
-      gradient: "bg-gradient-to-r from-cyan-600 to-teal-700",
+      icon: <Image src="/icons/skyscanner.svg" alt="Skyscanner" width={28} height={28} className="rounded" />,
+      iconBg: "bg-white",
+      gradient: "bg-gradient-to-r from-cyan-500 to-teal-600",
       desc: "Global flight search",
+      badge: null
+    },
+    {
+      id: "cleartrip",
+      name: "Cleartrip",
+      icon: <Image src="/icons/cleartrip.svg" alt="Cleartrip" width={28} height={28} className="rounded" />,
+      iconBg: "bg-white",
+      gradient: "bg-gradient-to-r from-orange-500 to-red-600",
+      desc: "Quick & easy booking",
       badge: null
     },
   ];
@@ -305,7 +320,7 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
                       className={`group flex items-center justify-between w-full p-4 rounded-2xl text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${platform.gradient}`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                        <div className={`w-10 h-10 ${platform.iconBg} rounded-xl flex items-center justify-center overflow-hidden`}>
                           {platform.icon}
                         </div>
                         <div>
