@@ -2,6 +2,23 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
 export async function middleware(request: NextRequest) {
+  const { pathname } = request.nextUrl;
+
+  // Protected routes - require authentication
+  const protectedRoutes = ["/", "/chat"];
+  const isProtectedRoute = protectedRoutes.some(
+    (route) => pathname === route || pathname.startsWith("/chat/")
+  );
+
+  // Auth routes - redirect to home if already logged in
+  const authRoutes = ["/login", "/register"];
+  const isAuthRoute = authRoutes.some((route) => pathname === route);
+
+  // Skip auth check if not on protected or auth routes
+  if (!isProtectedRoute && !isAuthRoute) {
+    return NextResponse.next();
+  }
+
   let supabaseResponse = NextResponse.next({
     request,
   });
@@ -29,25 +46,15 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Get the user session
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  const { pathname } = request.nextUrl;
-
-  // Protected routes - require authentication
-  const protectedRoutes = ["/", "/chat"];
-  const isProtectedRoute = protectedRoutes.some(
-    (route) => pathname === route || pathname.startsWith("/chat/")
+  // Quick session check using cookies (faster than getUser())
+  // Supabase stores auth tokens in cookies with pattern: sb-<project-ref>-auth-token
+  const authCookies = request.cookies.getAll().filter(cookie =>
+    cookie.name.includes('sb-') && cookie.name.includes('-auth-token')
   );
-
-  // Auth routes - redirect to home if already logged in
-  const authRoutes = ["/login", "/register"];
-  const isAuthRoute = authRoutes.some((route) => pathname === route);
+  const hasSession = authCookies.length > 0;
 
   // If user is not authenticated and trying to access protected route
-  if (!user && isProtectedRoute) {
+  if (!hasSession && isProtectedRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     url.searchParams.set("redirectTo", pathname);
@@ -55,7 +62,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // If user is authenticated and trying to access auth routes
-  if (user && isAuthRoute) {
+  if (hasSession && isAuthRoute) {
     const url = request.nextUrl.clone();
     url.pathname = "/";
     return NextResponse.redirect(url);

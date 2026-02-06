@@ -5,4 +5,5 @@ export { ChatInput } from "./ChatInput";
 export { Messages } from "./Messages";
 export { Greeting } from "./Greeting";
 export { BookingModal } from "./BookingModal";
+export { VoiceChat } from "./VoiceChat";
 

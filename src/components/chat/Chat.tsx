@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { v4 as uuidv4 } from "uuid";
 import { Greeting } from "./Greeting";
@@ -12,7 +12,9 @@ import {
   MoreHorizontal,
   Trash2,
   Download,
-  RefreshCw
+  RefreshCw,
+  Volume2,
+  VolumeX
 } from "lucide-react";
 
 interface ChatProps {
@@ -27,8 +29,12 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
+  const [isVoiceEnabled, setIsVoiceEnabled] = useState(true);
   const previousChatIdRef = useRef<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
+  const streamingMessageRef = useRef<string>("");
+  const firstSentenceSpokenRef = useRef<boolean>(false);
 
   // Stop generation handler
   const handleStopGeneration = useCallback(() => {
@@ -76,6 +82,66 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
       }
     }
   }, [chatId]);
+
+  // Streaming voice mode handler - streams LLM response and triggers TTS on first sentence
+  const handleVoiceStreamMessage = useCallback(async (content: string, activeChatId: string) => {
+    streamingMessageRef.current = "";
+    firstSentenceSpokenRef.current = false;
+
+    try {
+      const response = await fetch("/api/chat/v3/stream", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: content,
+          history: messages.slice(-6).map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!response.ok || !response.body) {
+        throw new Error("Stream failed");
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split("\n");
+
+        for (const line of lines) {
+          if (line.startsWith("data: ") && line !== "data: [DONE]") {
+            try {
+              const data = JSON.parse(line.slice(6));
+              if (data.content) {
+                streamingMessageRef.current += data.content;
+
+                // Check for first sentence completion (., !, or ?)
+                if (!firstSentenceSpokenRef.current) {
+                  const match = streamingMessageRef.current.match(/[.!?]/);
+                  if (match) {
+                    firstSentenceSpokenRef.current = true;
+                    // Trigger TTS for first sentence immediately
+                    const firstSentence = streamingMessageRef.current.slice(0, match.index! + 1);
+                    window.dispatchEvent(new CustomEvent("speakFirstSentence", { detail: firstSentence }));
+                  }
+                }
+              }
+            } catch {}
+          }
+        }
+      }
+
+      // Return the full message
+      return streamingMessageRef.current;
+    } catch (error) {
+      console.error("Voice stream error:", error);
+      return null;
+    }
+  }, [messages]);
 
   const handleSendMessage = useCallback(async (content: string) => {
     if (!content.trim() || isLoading) return;
@@ -134,31 +200,45 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
       // Create abort controller for this request
       abortControllerRef.current = new AbortController();
 
-      // Get AI response using v3 API (LangChain Agent with RAG)
-      const response = await fetch("/api/chat/v3", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: content,
-          conversationId: activeChatId,
-          history: currentMessages.slice(-10).map((m) => ({
-            role: m.role,
-            content: m.content,
-          })),
-        }),
-        signal: abortControllerRef.current.signal,
-      });
+      let assistantMessage: Message;
 
-      const data = await response.json();
+      // Use streaming API for voice mode (lower latency)
+      if (voiceMode) {
+        const streamedMessage = await handleVoiceStreamMessage(content, activeChatId!);
+        assistantMessage = {
+          id: uuidv4(),
+          chat_id: activeChatId!,
+          role: "assistant",
+          content: streamedMessage || "I'm here to help you plan your travel.",
+          created_at: new Date().toISOString(),
+        };
+      } else {
+        // Get AI response using v3 API (LangChain Agent with RAG)
+        const response = await fetch("/api/chat/v3", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: content,
+            conversationId: activeChatId,
+            history: currentMessages.slice(-10).map((m) => ({
+              role: m.role,
+              content: m.content,
+            })),
+          }),
+          signal: abortControllerRef.current.signal,
+        });
 
-      const assistantMessage: Message = {
-        id: uuidv4(),
-        chat_id: activeChatId!,
-        role: "assistant",
-        content: data.message || "I'm here to help you plan your travel.",
-        search_results: data.searchResults,
-        created_at: new Date().toISOString(),
-      };
+        const data = await response.json();
+
+        assistantMessage = {
+          id: uuidv4(),
+          chat_id: activeChatId!,
+          role: "assistant",
+          content: data.message || "I'm here to help you plan your travel.",
+          search_results: data.searchResults,
+          created_at: new Date().toISOString(),
+        };
+      }
 
       setMessages((prev) => [...prev, assistantMessage]);
 
@@ -169,7 +249,7 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
         body: JSON.stringify({
           role: "assistant",
           content: assistantMessage.content,
-          search_results: data.searchResults,
+          search_results: assistantMessage.search_results,
         }),
       }).catch(console.error);
 
@@ -201,10 +281,26 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
       abortControllerRef.current = null;
       setIsLoading(false);
     }
-  }, [chatId, isLoading, messages, router]);
+  }, [chatId, isLoading, messages, router, voiceMode, handleVoiceStreamMessage]);
 
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const moreMenuRef = useRef<HTMLDivElement>(null);
+
+  // Get the last assistant message for voice output
+  const lastAssistantMessage = useMemo(() => {
+    const assistantMessages = messages.filter((m) => m.role === "assistant");
+    return assistantMessages.length > 0
+      ? assistantMessages[assistantMessages.length - 1].content
+      : undefined;
+  }, [messages]);
+
+  // Toggle voice output (sound on/off)
+  const toggleVoiceOutput = useCallback(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsVoiceEnabled(!isVoiceEnabled);
+  }, [isVoiceEnabled]);
 
   // Close more menu when clicking outside
   useEffect(() => {
@@ -249,6 +345,21 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
 
         {/* Right: Actions */}
         <div className="flex items-center gap-1">
+          {/* Voice output toggle - only visible in voice mode */}
+          {voiceMode && (
+            <button
+              onClick={toggleVoiceOutput}
+              className={`p-2 rounded-lg transition-colors ${
+                isVoiceEnabled
+                  ? "bg-blue-100 dark:bg-blue-900/50 text-blue-600 dark:text-blue-400"
+                  : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800"
+              }`}
+              title={isVoiceEnabled ? "Sound ON - Click to mute" : "Sound OFF - Click to unmute"}
+            >
+              {isVoiceEnabled ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
+            </button>
+          )}
+
           {messages.length > 0 && (
             <>
               <button
@@ -323,7 +434,17 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
       ) : (
         <Messages messages={messages} isLoading={isLoading} />
       )}
-      <ChatInput onSendMessage={handleSendMessage} onStop={handleStopGeneration} isLoading={isLoading} />
+
+      {/* Input Area with integrated voice */}
+      <ChatInput
+        onSendMessage={handleSendMessage}
+        onStop={handleStopGeneration}
+        isLoading={isLoading}
+        lastAssistantMessage={lastAssistantMessage}
+        voiceMode={voiceMode}
+        onVoiceModeChange={setVoiceMode}
+        isVoiceEnabled={isVoiceEnabled}
+      />
     </div>
   );
 }

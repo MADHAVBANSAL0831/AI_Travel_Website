@@ -274,3 +274,13 @@ body {
 .dark .scrollbar-modal {
   scrollbar-color: rgba(75, 85, 99, 0.4) transparent;
 }
+
+/* Sound wave animation for voice mode */
+@keyframes soundwave {
+  0%, 100% {
+    transform: scaleY(0.3);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
