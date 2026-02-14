@@ -65,6 +65,10 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
 
   const startRecording = useCallback(async () => {
     try {
+      // Show immediate feedback
+      setIsListening(true);
+      setTranscript("Requesting microphone...");
+
       // Request audio with optimized settings for speech
       const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
@@ -74,6 +78,8 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
           sampleRate: 16000 // Lower sample rate = smaller files, still good for speech
         }
       });
+
+      setTranscript(""); // Clear the "requesting" message
       streamRef.current = stream;
       audioContextRef.current = new AudioContext({ sampleRate: 16000 });
       const source = audioContextRef.current.createMediaStreamSource(stream);
@@ -115,11 +121,14 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
       };
 
       mediaRecorder.start(100);
-      setIsListening(true);
+      // isListening already set to true at the beginning
 
       // Start browser speech recognition for live transcript display
       if (recognitionRef.current) {
-        try { recognitionRef.current.start(); } catch {}
+        try {
+          recognitionRef.current.start();
+          setTranscript("Listening..."); // Show immediate feedback
+        } catch {}
       }
 
       const checkSilence = () => {
@@ -134,13 +143,18 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
         if (mediaRecorderRef.current?.state === 'recording') requestAnimationFrame(checkSilence);
       };
       requestAnimationFrame(checkSilence);
-    } catch (err) { console.error("Mic access error:", err); setIsListening(false); }
+    } catch (err) {
+      console.error("Mic access error:", err);
+      setIsListening(false);
+      setTranscript("Microphone access denied");
+      setTimeout(() => setTranscript(""), 2000);
+    }
   }, [onSendMessage, stopRecording]);
 
   useEffect(() => {
     if (voiceMode && !isListening && !isSpeaking && !isLoading && !isTranscribing) {
-      const timer = setTimeout(() => startRecording(), 300);
-      return () => clearTimeout(timer);
+      // Start immediately, no delay
+      startRecording();
     }
   }, [voiceMode, isListening, isSpeaking, isLoading, isTranscribing, startRecording]);
 
@@ -240,11 +254,25 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
     return () => window.removeEventListener("speakFirstSentence", handleFirstSentence as EventListener);
   }, [voiceMode, isVoiceEnabled, isSpeaking, speakText]);
 
-  const toggleVoiceMode = useCallback(() => {
-    const n = !voiceMode; onVoiceModeChange?.(n);
-    if (n) { if (lastAssistantMessage) lastSpokenMessageRef.current = lastAssistantMessage; }
-    else { stopRecording(); setTranscript(""); if (isSpeaking) { window.speechSynthesis?.cancel(); setIsSpeaking(false); } }
-  }, [voiceMode, onVoiceModeChange, isSpeaking, lastAssistantMessage, stopRecording]);
+  const toggleVoiceMode = useCallback(async () => {
+    const n = !voiceMode;
+    onVoiceModeChange?.(n);
+
+    if (n) {
+      // Entering voice mode
+      if (lastAssistantMessage) lastSpokenMessageRef.current = lastAssistantMessage;
+      // Start recording immediately
+      await startRecording();
+    } else {
+      // Exiting voice mode
+      stopRecording();
+      setTranscript("");
+      if (isSpeaking) {
+        window.speechSynthesis?.cancel();
+        setIsSpeaking(false);
+      }
+    }
+  }, [voiceMode, onVoiceModeChange, isSpeaking, lastAssistantMessage, stopRecording, startRecording]);
 
   useEffect(() => { const t = textareaRef.current; if (t) { t.style.height = "auto"; t.style.height = `${Math.min(t.scrollHeight, 200)}px`; } }, [inputValue]);
   useEffect(() => { if (!isLoading && textareaRef.current) textareaRef.current.focus(); }, [isLoading]);
