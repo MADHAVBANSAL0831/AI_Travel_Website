@@ -87,6 +87,7 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
   const handleVoiceStreamMessage = useCallback(async (content: string, activeChatId: string) => {
     streamingMessageRef.current = "";
     firstSentenceSpokenRef.current = false;
+    let searchResults: any[] = [];
 
     try {
       const response = await fetch("/api/chat/v3/stream", {
@@ -116,7 +117,9 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
           if (line.startsWith("data: ") && line !== "data: [DONE]") {
             try {
               const data = JSON.parse(line.slice(6));
-              if (data.content) {
+
+              // Handle text chunks
+              if (data.type === 'chunk' && data.content) {
                 streamingMessageRef.current += data.content;
 
                 // Check for first sentence completion (., !, or ?)
@@ -130,16 +133,28 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
                   }
                 }
               }
-            } catch {}
+
+              // Handle search results
+              if (data.type === 'searchResults' && data.searchResults) {
+                console.log("📦 Search results received:", data.searchResults.length, "results");
+                searchResults = data.searchResults;
+              }
+            } catch (e) {
+              console.error("Error parsing stream data:", e);
+            }
           }
         }
       }
 
-      // Return the full message
-      return streamingMessageRef.current;
+      // Return the full message and search results
+      const fullMessage = streamingMessageRef.current;
+      if (fullMessage) {
+        window.dispatchEvent(new CustomEvent("streamingComplete", { detail: fullMessage }));
+      }
+      return { message: fullMessage, searchResults };
     } catch (error) {
       console.error("Voice stream error:", error);
-      return null;
+      return { message: null, searchResults: [] };
     }
   }, [messages]);
 
@@ -204,12 +219,13 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
 
       // Use streaming API for voice mode (lower latency)
       if (voiceMode) {
-        const streamedMessage = await handleVoiceStreamMessage(content, activeChatId!);
+        const result = await handleVoiceStreamMessage(content, activeChatId!);
         assistantMessage = {
           id: uuidv4(),
           chat_id: activeChatId!,
           role: "assistant",
-          content: streamedMessage || "I'm here to help you plan your travel.",
+          content: result.message || "I'm here to help you plan your travel.",
+          search_results: result.searchResults && result.searchResults.length > 0 ? result.searchResults : undefined,
           created_at: new Date().toISOString(),
         };
       } else {

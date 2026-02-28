@@ -131,15 +131,38 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
         } catch {}
       }
 
+      let lastLogTime = 0;
       const checkSilence = () => {
         if (!analyserRef.current || !mediaRecorderRef.current || mediaRecorderRef.current.state !== 'recording') return;
         const dataArray = new Uint8Array(analyserRef.current.frequencyBinCount);
         analyserRef.current.getByteFrequencyData(dataArray);
         const avg = dataArray.reduce((a, b) => a + b) / dataArray.length;
 
-        if (avg < 10) {
-          if (!silenceTimeoutRef.current) silenceTimeoutRef.current = setTimeout(() => stopRecording(), 1200); // Reduced from 2s to 1.2s for faster response
-        } else if (silenceTimeoutRef.current) { clearTimeout(silenceTimeoutRef.current); silenceTimeoutRef.current = null; }
+        // Log audio level every 500ms for debugging
+        const now = Date.now();
+        if (now - lastLogTime > 500) {
+          console.log('[Voice] Audio level:', avg.toFixed(2));
+          lastLogTime = now;
+        }
+
+        // Silence threshold: avg < 40 is considered silence
+        // Background noise is typically 16-20, speaking is 40+
+        if (avg < 40) {
+          if (!silenceTimeoutRef.current) {
+            console.log('[Voice] 🔇 Silence detected (avg:', avg.toFixed(2), '), starting 2s timeout...');
+            silenceTimeoutRef.current = setTimeout(() => {
+              console.log('[Voice] ⏱️ 2s silence timeout reached, stopping recording');
+              stopRecording();
+            }, 2000); // 2 seconds of silence
+          }
+        } else {
+          // Sound detected, cancel silence timeout
+          if (silenceTimeoutRef.current) {
+            console.log('[Voice] 🔊 Sound detected (avg:', avg.toFixed(2), '), canceling silence timeout');
+            clearTimeout(silenceTimeoutRef.current);
+            silenceTimeoutRef.current = null;
+          }
+        }
         if (mediaRecorderRef.current?.state === 'recording') requestAnimationFrame(checkSilence);
       };
       requestAnimationFrame(checkSilence);
@@ -151,10 +174,28 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
     }
   }, [onSendMessage, stopRecording]);
 
+  // Stop recording when AI starts speaking
   useEffect(() => {
+    if (isSpeaking && isListening) {
+      console.log('[Voice] 🔇 AI is speaking, stopping microphone');
+      stopRecording();
+    }
+  }, [isSpeaking, isListening, stopRecording]);
+
+  // Start recording only when AI finishes speaking
+  useEffect(() => {
+    // Only start recording when:
+    // 1. Voice mode is enabled
+    // 2. Not currently listening
+    // 3. AI is NOT speaking (important!)
+    // 4. Not loading/transcribing
     if (voiceMode && !isListening && !isSpeaking && !isLoading && !isTranscribing) {
-      // Start immediately, no delay
-      startRecording();
+      // Add a small delay to ensure TTS audio has fully stopped
+      const timer = setTimeout(() => {
+        console.log('[Voice] 🎤 AI finished speaking, starting microphone in 500ms');
+        startRecording();
+      }, 500);
+      return () => clearTimeout(timer);
     }
   }, [voiceMode, isListening, isSpeaking, isLoading, isTranscribing, startRecording]);
 
@@ -165,6 +206,13 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
 
   const speakText = useCallback(async (text: string) => {
     if (!text || typeof window === "undefined") return;
+
+    // Stop recording immediately when AI starts speaking
+    if (isListening) {
+      console.log('[Voice] Stopping recording because AI is about to speak');
+      stopRecording();
+    }
+
     const clean = text.replace(/\*\*/g, "").replace(/\*/g, "").replace(/#{1,6}\s/g, "").replace(/\[([^\]]+)\]\([^)]+\)/g, "$1").replace(/`[^`]+`/g, "").replace(/\n+/g, " ").slice(0, 500);
     setIsSpeaking(true);
 
@@ -235,7 +283,7 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
       const v = window.speechSynthesis.getVoices().find((v) => v.lang.startsWith("en")) || window.speechSynthesis.getVoices()[0]; if (v) u.voice = v;
       u.onend = () => setIsSpeaking(false); u.onerror = () => setIsSpeaking(false); window.speechSynthesis.speak(u);
     } else setIsSpeaking(false);
-  }, []);
+  }, [isListening, stopRecording]);
 
   useEffect(() => {
     if (voiceMode && isVoiceEnabled && lastAssistantMessage && lastAssistantMessage !== lastSpokenMessageRef.current && !isLoading && !isSpeaking) {
@@ -247,11 +295,27 @@ export function ChatInput({ onSendMessage, onStop, isLoading = false, disabled =
   useEffect(() => {
     const handleFirstSentence = (e: CustomEvent<string>) => {
       if (voiceMode && isVoiceEnabled && !isSpeaking && e.detail) {
+        console.log('[Voice] 🎵 Speaking first sentence from stream');
         speakText(e.detail);
+        // Mark that we've started speaking this message to prevent duplicate TTS
+        lastSpokenMessageRef.current = e.detail;
       }
     };
+
+    const handleFullMessage = (e: CustomEvent<string>) => {
+      if (voiceMode && isVoiceEnabled && e.detail) {
+        console.log('[Voice] 📝 Full message received, marking as spoken');
+        // Mark the full message as spoken so lastAssistantMessage doesn't trigger TTS again
+        lastSpokenMessageRef.current = e.detail;
+      }
+    };
+
     window.addEventListener("speakFirstSentence", handleFirstSentence as EventListener);
-    return () => window.removeEventListener("speakFirstSentence", handleFirstSentence as EventListener);
+    window.addEventListener("streamingComplete", handleFullMessage as EventListener);
+    return () => {
+      window.removeEventListener("speakFirstSentence", handleFirstSentence as EventListener);
+      window.removeEventListener("streamingComplete", handleFullMessage as EventListener);
+    };
   }, [voiceMode, isVoiceEnabled, isSpeaking, speakText]);
 
   const toggleVoiceMode = useCallback(async () => {
