@@ -102,10 +102,11 @@ export function VoiceChat({
     // Try ElevenLabs first, fallback to browser speech
     try {
       console.log("Calling /api/voice/speak...");
+      const voiceId = "EXAVITQu4vr4xnSDxMaL"; // Sarah voice - consistent
       const response = await fetch("/api/voice/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text: cleanText }),
+        body: JSON.stringify({ text: cleanText, voiceId }),
       });
 
       console.log("API response status:", response.status);

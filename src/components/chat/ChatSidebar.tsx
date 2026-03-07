@@ -20,6 +20,7 @@ import {
   ChevronUp,
   Sun,
   Moon,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Chat, GroupedChats } from "@/lib/types/chat";
@@ -34,6 +35,9 @@ interface ChatSidebarProps {
   onDeleteChat: (chatId: string) => void;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  isMobile?: boolean;
+  isMobileMenuOpen?: boolean;
+  onCloseMobileMenu?: () => void;
 }
 
 function groupChatsByDate(chats: Chat[]): GroupedChats {
@@ -70,11 +74,51 @@ export function ChatSidebar({
   onDeleteChat,
   isCollapsed,
   onToggleCollapse,
+  isMobile = false,
+  isMobileMenuOpen = false,
+  onCloseMobileMenu,
 }: ChatSidebarProps) {
   const pathname = usePathname();
   const currentChatId = pathname?.startsWith("/chat/") ? pathname.split("/")[2] : null;
   const groupedChats = groupChatsByDate(chats);
 
+  // Mobile drawer overlay
+  if (isMobile) {
+    return (
+      <>
+        {/* Backdrop */}
+        {isMobileMenuOpen && (
+          <div
+            className="fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={onCloseMobileMenu}
+          />
+        )}
+
+        {/* Drawer */}
+        <aside
+          className={cn(
+            "fixed top-0 left-0 h-full bg-gray-900 text-white z-50 transition-transform duration-300 w-72",
+            isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
+          )}
+        >
+          <SidebarContent
+            chats={chats}
+            isLoading={isLoading}
+            onNewChat={onNewChat}
+            onDeleteChat={onDeleteChat}
+            isCollapsed={false}
+            onToggleCollapse={onToggleCollapse}
+            groupedChats={groupedChats}
+            currentChatId={currentChatId}
+            isMobile={true}
+            onCloseMobileMenu={onCloseMobileMenu}
+          />
+        </aside>
+      </>
+    );
+  }
+
+  // Desktop sidebar
   return (
     <aside
       className={cn(
@@ -82,6 +126,60 @@ export function ChatSidebar({
         isCollapsed ? "w-16" : "w-72"
       )}
     >
+      <SidebarContent
+        chats={chats}
+        isLoading={isLoading}
+        onNewChat={onNewChat}
+        onDeleteChat={onDeleteChat}
+        isCollapsed={isCollapsed}
+        onToggleCollapse={onToggleCollapse}
+        groupedChats={groupedChats}
+        currentChatId={currentChatId}
+        isMobile={false}
+      />
+    </aside>
+  );
+}
+
+function SidebarContent({
+  chats,
+  isLoading,
+  onNewChat,
+  onDeleteChat,
+  isCollapsed,
+  onToggleCollapse,
+  groupedChats,
+  currentChatId,
+  isMobile,
+  onCloseMobileMenu,
+}: {
+  chats: Chat[];
+  isLoading: boolean;
+  onNewChat: () => void;
+  onDeleteChat: (chatId: string) => void;
+  isCollapsed: boolean;
+  onToggleCollapse: () => void;
+  groupedChats: GroupedChats;
+  currentChatId: string | null;
+  isMobile: boolean;
+  onCloseMobileMenu?: () => void;
+}) {
+  const handleNewChat = () => {
+    onNewChat();
+    if (isMobile && onCloseMobileMenu) {
+      onCloseMobileMenu();
+    }
+  };
+
+  const handleDeleteChat = (chatId: string) => {
+    onDeleteChat(chatId);
+    if (isMobile && onCloseMobileMenu) {
+      onCloseMobileMenu();
+    }
+  };
+
+  return (
+    <>
       {/* Header */}
       <div className={cn(
         "flex items-center p-4",
@@ -99,9 +197,9 @@ export function ChatSidebar({
             </div>
           </button>
         ) : (
-          // Expanded: Show logo and collapse button
+          // Expanded: Show logo and collapse/close button
           <>
-            <Link href="/" className="flex items-center group">
+            <Link href="/" className="flex items-center group" onClick={isMobile && onCloseMobileMenu ? onCloseMobileMenu : undefined}>
               <div className="bg-gradient-to-br from-blue-500 to-blue-700 p-2 rounded-xl shadow-lg shadow-blue-500/20 group-hover:shadow-blue-500/30 transition-all">
                 <Plane className="h-4 w-4 text-white" />
               </div>
@@ -109,10 +207,11 @@ export function ChatSidebar({
             <Button
               variant="ghost"
               size="icon"
-              onClick={onToggleCollapse}
+              onClick={isMobile && onCloseMobileMenu ? onCloseMobileMenu : onToggleCollapse}
               className="text-gray-400 hover:text-white hover:bg-gray-800 rounded-xl transition-all"
+              title={isMobile ? "Close menu" : "Collapse sidebar"}
             >
-              <PanelLeftClose className="h-5 w-5" />
+              {isMobile ? <X className="h-5 w-5" /> : <PanelLeftClose className="h-5 w-5" />}
             </Button>
           </>
         )}
@@ -121,7 +220,7 @@ export function ChatSidebar({
       {/* New Chat Button */}
       <div className={cn("p-3", isCollapsed && "flex justify-center")}>
         <button
-          onClick={onNewChat}
+          onClick={handleNewChat}
           className={cn(
             "flex items-center gap-2.5 py-2 px-3 rounded-lg transition-all duration-200 hover:bg-gray-800 text-gray-300 hover:text-white",
             isCollapsed ? "p-2" : "w-full"
@@ -150,8 +249,10 @@ export function ChatSidebar({
             <ChatGroups
               groupedChats={groupedChats}
               currentChatId={currentChatId}
-              onDeleteChat={onDeleteChat}
+              onDeleteChat={handleDeleteChat}
               isCollapsed={isCollapsed}
+              isMobile={isMobile}
+              onCloseMobileMenu={onCloseMobileMenu}
             />
           )}
         </div>
@@ -162,17 +263,19 @@ export function ChatSidebar({
 
       {/* Footer */}
       <UserMenu isCollapsed={isCollapsed} />
-    </aside>
+    </>
   );
 }
 
 function ChatGroups({
-  groupedChats, currentChatId, onDeleteChat, isCollapsed
+  groupedChats, currentChatId, onDeleteChat, isCollapsed, isMobile, onCloseMobileMenu
 }: {
   groupedChats: GroupedChats;
   currentChatId: string | null;
   onDeleteChat: (id: string) => void;
   isCollapsed: boolean;
+  isMobile?: boolean;
+  onCloseMobileMenu?: () => void;
 }) {
   const sections = [
     { label: "Today", chats: groupedChats.today },
@@ -193,6 +296,8 @@ function ChatGroups({
             currentChatId={currentChatId}
             onDeleteChat={onDeleteChat}
             isCollapsed={isCollapsed}
+            isMobile={isMobile}
+            onCloseMobileMenu={onCloseMobileMenu}
           />
         )
       )}
@@ -201,13 +306,15 @@ function ChatGroups({
 }
 
 function ChatSection({
-  label, chats, currentChatId, onDeleteChat
+  label, chats, currentChatId, onDeleteChat, isCollapsed, isMobile, onCloseMobileMenu
 }: {
   label: string;
   chats: Chat[];
   currentChatId: string | null;
   onDeleteChat: (id: string) => void;
   isCollapsed: boolean;
+  isMobile?: boolean;
+  onCloseMobileMenu?: () => void;
 }) {
   return (
     <div>
@@ -226,6 +333,8 @@ function ChatSection({
             chat={chat}
             isActive={chat.id === currentChatId}
             onDelete={() => onDeleteChat(chat.id)}
+            isMobile={isMobile}
+            onCloseMobileMenu={onCloseMobileMenu}
           />
         ))}
       </div>
@@ -234,11 +343,13 @@ function ChatSection({
 }
 
 function ChatItem({
-  chat, isActive, onDelete
+  chat, isActive, onDelete, isMobile, onCloseMobileMenu
 }: {
   chat: Chat;
   isActive: boolean;
   onDelete: () => void;
+  isMobile?: boolean;
+  onCloseMobileMenu?: () => void;
 }) {
   const [showMenu, setShowMenu] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
@@ -256,9 +367,15 @@ function ChatItem({
     }
   }, [showMenu]);
 
+  const handleClick = () => {
+    if (isMobile && onCloseMobileMenu) {
+      onCloseMobileMenu();
+    }
+  };
+
   return (
     <div className="relative group">
-      <Link href={`/chat/${chat.id}`}>
+      <Link href={`/chat/${chat.id}`} onClick={handleClick}>
         <div
           className={cn(
             "flex items-start gap-2 px-3 py-1.5 rounded-xl cursor-pointer transition-colors duration-300 ease-out",

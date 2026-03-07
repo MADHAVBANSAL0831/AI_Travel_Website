@@ -46,12 +46,9 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  // Quick session check using cookies (faster than getUser())
-  // Supabase stores auth tokens in cookies with pattern: sb-<project-ref>-auth-token
-  const authCookies = request.cookies.getAll().filter(cookie =>
-    cookie.name.includes('sb-') && cookie.name.includes('-auth-token')
-  );
-  const hasSession = authCookies.length > 0;
+  // Properly validate the session (not just check for cookies)
+  const { data: { session }, error } = await supabase.auth.getSession();
+  const hasSession = !!session && !error;
 
   // If user is not authenticated and trying to access protected route
   if (!hasSession && isProtectedRoute) {

@@ -115,10 +115,11 @@ export function ChatAssistant({ onAction }: ChatAssistantProps) {
   const speakText = async (text: string) => {
     setIsSpeaking(true);
     try {
+      const voiceId = "EXAVITQu4vr4xnSDxMaL"; // Sarah voice - consistent
       const response = await fetch("/api/voice/speak", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ text }),
+        body: JSON.stringify({ text, voiceId }),
       });
       
       if (response.ok) {

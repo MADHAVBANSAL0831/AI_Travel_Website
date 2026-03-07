@@ -16,7 +16,7 @@ const SUGGESTED_PROMPTS = [
 
 export function Greeting({ onSuggestionClick }: GreetingProps) {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 relative overflow-hidden">
+    <div className="flex flex-col items-center justify-center min-h-[70vh] text-center px-4 md:px-6 relative overflow-hidden">
       {/* Subtle background pattern */}
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.1),rgba(255,255,255,0))] dark:bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.15),rgba(0,0,0,0))]" />
 
@@ -27,8 +27,8 @@ export function Greeting({ onSuggestionClick }: GreetingProps) {
         className="relative"
       >
         <div className="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-500 rounded-2xl blur-xl opacity-40 animate-pulse" />
-        <div className="relative bg-gradient-to-br from-blue-500 to-purple-600 p-5 rounded-2xl mb-6 shadow-xl">
-          <Sparkles className="h-10 w-10 text-white" />
+        <div className="relative bg-gradient-to-br from-blue-500 to-purple-600 p-4 md:p-5 rounded-2xl mb-4 md:mb-6 shadow-xl">
+          <Sparkles className="h-8 w-8 md:h-10 md:w-10 text-white" />
         </div>
       </motion.div>
 
@@ -36,7 +36,7 @@ export function Greeting({ onSuggestionClick }: GreetingProps) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3"
+        className="text-2xl md:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-2 md:mb-3 px-2"
       >
         Where would you like to go?
       </motion.h1>
@@ -45,7 +45,7 @@ export function Greeting({ onSuggestionClick }: GreetingProps) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="text-gray-500 dark:text-gray-400 mb-10 max-w-md text-lg"
+        className="text-gray-500 dark:text-gray-400 mb-6 md:mb-10 max-w-md text-base md:text-lg px-2"
       >
         I&apos;m your AI travel assistant. Tell me about your trip and I&apos;ll find the best options for you.
       </motion.p>
@@ -54,7 +54,7 @@ export function Greeting({ onSuggestionClick }: GreetingProps) {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full max-w-2xl"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-3 md:gap-4 w-full max-w-2xl px-2"
       >
         {SUGGESTED_PROMPTS.map((prompt, index) => (
           <motion.button
@@ -65,12 +65,12 @@ export function Greeting({ onSuggestionClick }: GreetingProps) {
             whileHover={{ scale: 1.02, y: -2 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onSuggestionClick(prompt.text)}
-            className={`flex items-center gap-4 p-4 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 ${prompt.borderColor} ${prompt.hoverBg} transition-all text-left group shadow-sm hover:shadow-lg`}
+            className={`flex items-center gap-3 md:gap-4 p-3 md:p-4 bg-white dark:bg-gray-800 rounded-xl md:rounded-2xl border border-gray-200 dark:border-gray-700 ${prompt.borderColor} ${prompt.hoverBg} transition-all text-left group shadow-sm hover:shadow-lg active:shadow-md`}
           >
-            <div className={`p-3 ${prompt.bgColor} rounded-xl transition-all duration-300 group-hover:scale-110`}>
-              <prompt.icon className={`h-5 w-5 ${prompt.iconColor}`} />
+            <div className={`p-2 md:p-3 ${prompt.bgColor} rounded-lg md:rounded-xl transition-all duration-300 group-hover:scale-110 flex-shrink-0`}>
+              <prompt.icon className={`h-4 w-4 md:h-5 md:w-5 ${prompt.iconColor}`} />
             </div>
-            <span className="text-sm text-gray-700 dark:text-gray-300 font-medium leading-snug">
+            <span className="text-xs md:text-sm text-gray-700 dark:text-gray-300 font-medium leading-snug">
               {prompt.text}
             </span>
           </motion.button>

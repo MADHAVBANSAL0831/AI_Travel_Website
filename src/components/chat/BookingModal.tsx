@@ -211,17 +211,17 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9, y: 40 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4"
           >
             <div
-              className="bg-white dark:bg-gray-900 rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden border border-transparent dark:border-gray-800"
+              className="bg-white dark:bg-gray-900 rounded-2xl md:rounded-3xl shadow-2xl max-w-md w-full max-h-[95vh] md:max-h-[90vh] overflow-hidden border border-transparent dark:border-gray-800"
               onClick={(e) => e.stopPropagation()}
             >
               {/* Hero Header with Gradient */}
-              <div className={`${airlineGradient} p-6 relative overflow-hidden`}>
+              <div className={`${airlineGradient} p-4 md:p-6 relative overflow-hidden`}>
                 {/* Background decoration - z-0 to stay behind */}
-                <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 z-0 pointer-events-none" />
-                <div className="absolute bottom-0 left-0 w-24 h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 z-0 pointer-events-none" />
+                <div className="absolute top-0 right-0 w-24 h-24 md:w-32 md:h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 z-0 pointer-events-none" />
+                <div className="absolute bottom-0 left-0 w-20 h-20 md:w-24 md:h-24 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2 z-0 pointer-events-none" />
 
                 {/* Close button - z-20 to stay on top */}
                 <button
@@ -229,51 +229,51 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
                     e.stopPropagation();
                     onClose();
                   }}
-                  className="absolute top-4 right-4 z-20 p-2 bg-white/20 hover:bg-white/30 rounded-full transition-colors cursor-pointer"
+                  className="absolute top-3 right-3 md:top-4 md:right-4 z-20 p-1.5 md:p-2 bg-white/20 hover:bg-white/30 active:bg-white/40 rounded-full transition-colors cursor-pointer"
                 >
-                  <X className="h-5 w-5 text-white" />
+                  <X className="h-4 w-4 md:h-5 md:w-5 text-white" />
                 </button>
 
                 {/* Airline & Flight Info */}
                 <div className="relative z-10">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-lg">
-                      <span className="font-bold text-gray-800">{airlineCode}</span>
+                  <div className="flex items-center gap-2 md:gap-3 mb-3 md:mb-4">
+                    <div className="w-10 h-10 md:w-12 md:h-12 bg-white rounded-lg md:rounded-xl flex items-center justify-center shadow-lg flex-shrink-0">
+                      <span className="font-bold text-gray-800 text-sm md:text-base">{airlineCode}</span>
                     </div>
-                    <div>
-                      <h2 className="text-white font-bold text-lg">{details.airlineName}</h2>
-                      <p className="text-white/80 text-sm">{details.flightNumber} • {details.class}</p>
+                    <div className="min-w-0 flex-1">
+                      <h2 className="text-white font-bold text-base md:text-lg truncate">{details.airlineName}</h2>
+                      <p className="text-white/80 text-xs md:text-sm truncate">{details.flightNumber} • {details.class}</p>
                     </div>
                   </div>
 
                   {/* Route Display */}
-                  <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4">
-                    <div className="flex items-center justify-between">
-                      <div className="text-center">
-                        <p className="text-3xl font-bold text-white">{details.departure}</p>
-                        <p className="text-white font-medium">{details.originCode}</p>
-                        <p className="text-white/70 text-xs mt-1">{details.departureCity}</p>
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl md:rounded-2xl p-3 md:p-4">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="text-center flex-shrink-0">
+                        <p className="text-2xl md:text-3xl font-bold text-white">{details.departure}</p>
+                        <p className="text-white font-medium text-xs md:text-sm">{details.originCode}</p>
+                        <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1 truncate max-w-[60px] md:max-w-none">{details.departureCity}</p>
                       </div>
 
-                      <div className="flex-1 px-4">
-                        <div className="flex items-center justify-center gap-2 mb-2">
-                          <Clock className="h-4 w-4 text-white/80" />
-                          <span className="text-sm text-white/80 font-medium">{details.duration}</span>
+                      <div className="flex-1 px-2 md:px-4 min-w-0">
+                        <div className="flex items-center justify-center gap-1 md:gap-2 mb-1 md:mb-2">
+                          <Clock className="h-3 w-3 md:h-4 md:w-4 text-white/80 flex-shrink-0" />
+                          <span className="text-xs md:text-sm text-white/80 font-medium truncate">{details.duration}</span>
                         </div>
                         <div className="relative flex items-center">
                           <div className="flex-1 h-[2px] bg-white/30" />
-                          <div className="absolute left-0 w-2 h-2 bg-white rounded-full" />
-                          <Plane className="mx-2 h-5 w-5 text-white" />
-                          <div className="absolute right-0 w-2 h-2 bg-white rounded-full" />
+                          <div className="absolute left-0 w-1.5 h-1.5 md:w-2 md:h-2 bg-white rounded-full" />
+                          <Plane className="mx-1 md:mx-2 h-4 w-4 md:h-5 md:w-5 text-white flex-shrink-0" />
+                          <div className="absolute right-0 w-1.5 h-1.5 md:w-2 md:h-2 bg-white rounded-full" />
                           <div className="flex-1 h-[2px] bg-white/30" />
                         </div>
-                        <p className="text-xs text-white/70 text-center mt-2">{details.stops}</p>
+                        <p className="text-[10px] md:text-xs text-white/70 text-center mt-1 md:mt-2 truncate">{details.stops}</p>
                       </div>
 
-                      <div className="text-center">
-                        <p className="text-3xl font-bold text-white">{details.arrival}</p>
-                        <p className="text-white font-medium">{details.destinationCode}</p>
-                        <p className="text-white/70 text-xs mt-1">{details.arrivalCity}</p>
+                      <div className="text-center flex-shrink-0">
+                        <p className="text-2xl md:text-3xl font-bold text-white">{details.arrival}</p>
+                        <p className="text-white font-medium text-xs md:text-sm">{details.destinationCode}</p>
+                        <p className="text-white/70 text-[10px] md:text-xs mt-0.5 md:mt-1 truncate max-w-[60px] md:max-w-none">{details.arrivalCity}</p>
                       </div>
                     </div>
                   </div>
@@ -281,33 +281,33 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
               </div>
 
               {/* Flight Meta & Price */}
-              <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Calendar className="h-4 w-4" />
-                    <span className="text-sm font-medium">{formatDate(details.date)}</span>
+              <div className="px-4 md:px-6 py-3 md:py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-2 md:gap-0">
+                <div className="flex items-center gap-3 md:gap-4 flex-wrap">
+                  <div className="flex items-center gap-1.5 md:gap-2 text-gray-600 dark:text-gray-400">
+                    <Calendar className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                    <span className="text-xs md:text-sm font-medium truncate">{formatDate(details.date)}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-400">
-                    <Users className="h-4 w-4" />
-                    <span className="text-sm font-medium">1 Adult</span>
+                  <div className="flex items-center gap-1.5 md:gap-2 text-gray-600 dark:text-gray-400">
+                    <Users className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                    <span className="text-xs md:text-sm font-medium">1 Adult</span>
                   </div>
                 </div>
-                <div className="text-right">
-                  <p className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
+                <div className="text-left md:text-right">
+                  <p className="text-xl md:text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-500 dark:from-green-400 dark:to-emerald-400 bg-clip-text text-transparent">
                     ₹{(flight.price || 0).toLocaleString()}
                   </p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">per person</p>
+                  <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400">per person</p>
                 </div>
               </div>
 
               {/* Booking Platforms */}
-              <div className="p-6 max-h-[300px] overflow-y-auto scrollbar-modal">
-                <div className="flex items-center gap-2 mb-4">
-                  <Sparkles className="h-4 w-4 text-amber-500" />
-                  <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Book on your preferred platform</p>
+              <div className="p-4 md:p-6 max-h-[350px] md:max-h-[300px] overflow-y-auto scrollbar-modal">
+                <div className="flex items-center gap-1.5 md:gap-2 mb-3 md:mb-4">
+                  <Sparkles className="h-3.5 w-3.5 md:h-4 md:w-4 text-amber-500 flex-shrink-0" />
+                  <p className="text-xs md:text-sm font-medium text-gray-700 dark:text-gray-300">Book on your preferred platform</p>
                 </div>
 
-                <div className="space-y-3">
+                <div className="space-y-2 md:space-y-3">
                   {platforms.map((platform, index) => (
                     <motion.a
                       key={platform.id}
@@ -317,45 +317,45 @@ export function BookingModal({ isOpen, onClose, flight }: BookingModalProps) {
                       href={getBookingUrl(platform.id, flight)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className={`group flex items-center justify-between w-full p-4 rounded-2xl text-white transition-all duration-300 hover:scale-[1.02] hover:shadow-lg ${platform.gradient}`}
+                      className={`group flex items-center justify-between w-full p-3 md:p-4 rounded-xl md:rounded-2xl text-white transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] hover:shadow-lg ${platform.gradient}`}
                     >
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 ${platform.iconBg} rounded-xl flex items-center justify-center overflow-hidden`}>
+                      <div className="flex items-center gap-2 md:gap-3 min-w-0 flex-1">
+                        <div className={`w-8 h-8 md:w-10 md:h-10 ${platform.iconBg} rounded-lg md:rounded-xl flex items-center justify-center overflow-hidden flex-shrink-0`}>
                           {platform.icon}
                         </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-semibold">{platform.name}</span>
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 md:gap-2">
+                            <span className="font-semibold text-sm md:text-base truncate">{platform.name}</span>
                             {platform.badge && (
-                              <span className="px-2 py-0.5 bg-white/20 rounded-full text-[10px] font-medium">
+                              <span className="px-1.5 md:px-2 py-0.5 bg-white/20 rounded-full text-[9px] md:text-[10px] font-medium flex-shrink-0">
                                 {platform.badge}
                               </span>
                             )}
                           </div>
-                          <span className="text-xs text-white/80">{platform.desc}</span>
+                          <span className="text-[11px] md:text-xs text-white/80 truncate block">{platform.desc}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all">
-                        <span className="text-sm font-medium">Book</span>
-                        <ArrowRight className="h-4 w-4" />
+                      <div className="flex items-center gap-1 md:gap-2 opacity-70 group-hover:opacity-100 group-hover:translate-x-1 transition-all flex-shrink-0">
+                        <span className="text-xs md:text-sm font-medium hidden sm:inline">Book</span>
+                        <ArrowRight className="h-3.5 w-3.5 md:h-4 md:w-4" />
                       </div>
                     </motion.a>
                   ))}
                 </div>
 
                 {/* Trust badges */}
-                <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700">
-                  <div className="flex items-center justify-center gap-6 text-gray-400 dark:text-gray-500">
-                    <div className="flex items-center gap-1.5">
-                      <Shield className="h-4 w-4" />
-                      <span className="text-xs">Secure Booking</span>
+                <div className="mt-4 md:mt-6 pt-3 md:pt-4 border-t border-gray-100 dark:border-gray-700">
+                  <div className="flex items-center justify-center gap-4 md:gap-6 text-gray-400 dark:text-gray-500">
+                    <div className="flex items-center gap-1 md:gap-1.5">
+                      <Shield className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                      <span className="text-[11px] md:text-xs">Secure Booking</span>
                     </div>
-                    <div className="flex items-center gap-1.5">
-                      <Tag className="h-4 w-4" />
-                      <span className="text-xs">Best Price</span>
+                    <div className="flex items-center gap-1 md:gap-1.5">
+                      <Tag className="h-3.5 w-3.5 md:h-4 md:w-4 flex-shrink-0" />
+                      <span className="text-[11px] md:text-xs">Best Price</span>
                     </div>
                   </div>
-                  <p className="text-[10px] text-gray-400 dark:text-gray-500 mt-3 text-center">
+                  <p className="text-[9px] md:text-[10px] text-gray-400 dark:text-gray-500 mt-2 md:mt-3 text-center px-2">
                     Prices shown are indicative. Final price may vary on the booking platform.
                   </p>
                 </div>

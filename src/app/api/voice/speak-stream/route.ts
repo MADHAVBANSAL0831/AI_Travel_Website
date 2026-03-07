@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
 
     // Use streaming endpoint for lower latency
     const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId || defaultVoiceId}/stream?optimize_streaming_latency=4&output_format=mp3_22050_32`,
+      `https://api.elevenlabs.io/v1/text-to-speech/${voiceId || defaultVoiceId}/stream?optimize_streaming_latency=2&output_format=mp3_44100_128`,
       {
         method: "POST",
         headers: {
@@ -30,11 +30,14 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           text: text.slice(0, 500),
-          model_id: "eleven_flash_v2_5", // Fastest model
+          model_id: "eleven_multilingual_v2", // Most advanced, emotionally-aware model
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
+            stability: 0.4, // 0.4 = natural expressiveness (recommended for multilingual v2)
+            similarity_boost: 0.9, // 0.9 = high similarity with natural variation
+            style: 0.3, // 0.3 = moderate expressiveness for human-like speech
+            use_speaker_boost: true, // Enhances voice clarity and quality
           },
+          language_code: "en", // Explicitly set English for better pronunciation
         }),
       }
     );

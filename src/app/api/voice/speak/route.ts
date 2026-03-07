@@ -15,7 +15,7 @@ export async function POST(request: NextRequest) {
     }
 
     const apiKey = process.env.ELEVENLABS_API_KEY;
-    const defaultVoiceId = process.env.ELEVENLABS_VOICE_ID || "21m00Tcm4TlvDq8ikWAM";
+    const defaultVoiceId = process.env.ELEVENLABS_VOICE_ID || "EXAVITQu4vr4xnSDxMaL"; // Sarah voice (consistent with stream endpoint)
 
     // Check if ElevenLabs API key is configured
     if (!apiKey) {
@@ -41,11 +41,14 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify({
           text: text.slice(0, 500), // Limit text length
-          model_id: "eleven_flash_v2_5",
+          model_id: "eleven_multilingual_v2", // Most advanced, emotionally-aware model
           voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
+            stability: 0.4, // 0.4 = natural expressiveness (recommended for multilingual v2)
+            similarity_boost: 0.9, // 0.9 = high similarity with natural variation
+            style: 0.3, // 0.3 = moderate expressiveness for human-like speech
+            use_speaker_boost: true, // Enhances voice clarity and quality
           },
+          language_code: "en", // Explicitly set English for better pronunciation
         }),
       }
     );

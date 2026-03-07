@@ -85,9 +85,12 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
 
   // Streaming voice mode handler - streams LLM response and triggers TTS on first sentence
   const handleVoiceStreamMessage = useCallback(async (content: string, activeChatId: string) => {
+    // Reset all streaming state for new message
     streamingMessageRef.current = "";
     firstSentenceSpokenRef.current = false;
     let searchResults: any[] = [];
+
+    console.log('[Chat] 🎬 Starting new voice stream for message:', content);
 
     try {
       const response = await fetch("/api/chat/v3/stream", {
@@ -353,10 +356,10 @@ export function Chat({ chatId, initialMessages = [] }: ChatProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Top Bar */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+      <div className="flex items-center justify-between pl-[52px] md:pl-4 pr-4 py-3 border-b border-gray-200 dark:border-gray-800 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
         {/* Left: Platform Name */}
         <div className="flex items-center">
-          <h1 className="font-semibold text-gray-900 dark:text-white">TravelHub</h1>
+          <h1 className="font-semibold text-base md:text-lg text-gray-900 dark:text-white">TravelHub</h1>
         </div>
 
         {/* Right: Actions */}

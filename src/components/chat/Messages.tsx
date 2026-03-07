@@ -32,8 +32,8 @@ export function Messages({ messages, isLoading }: MessagesProps) {
 
   return (
     <>
-      <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-chat">
-        <div className="max-w-3xl mx-auto space-y-6">
+      <div className="flex-1 overflow-y-auto px-3 md:px-4 py-4 md:py-6 scrollbar-chat">
+        <div className="max-w-3xl mx-auto space-y-4 md:space-y-6">
           <AnimatePresence mode="popLayout">
             {messages.map((message, index) => (
               <MessageBubble key={message.id} message={message} index={index} onBookFlight={handleBookFlight} />
@@ -70,21 +70,21 @@ function MessageBubble({ message, index, onBookFlight }: { message: Message; ind
       exit={{ opacity: 0, y: -10 }}
       transition={{ duration: 0.15 }}
       layout={false}
-      className={cn("flex gap-4 group", isUser ? "justify-end" : "justify-start")}
+      className={cn("flex gap-2 md:gap-4 group", isUser ? "justify-end" : "justify-start")}
     >
       {/* Assistant Avatar - only for non-user messages */}
       {!isUser && (
-        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-md">
-          <Bot className="h-4 w-4 text-white" />
+        <div className="flex-shrink-0 w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center shadow-md">
+          <Bot className="h-3.5 w-3.5 md:h-4 md:w-4 text-white" />
         </div>
       )}
 
-      <div className={cn(isUser ? "max-w-[60%]" : "max-w-[75%]", isUser && "text-right")}>
+      <div className={cn(isUser ? "max-w-[85%] md:max-w-[60%]" : "max-w-[90%] md:max-w-[75%]", isUser && "text-right")}>
         {/* User message styling */}
         {isUser ? (
           <div className="inline-block">
-            <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-gray-900 dark:text-gray-100 px-4 py-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
-              <p className="whitespace-pre-wrap text-[15px] leading-relaxed">{message.content}</p>
+            <div className="bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-gray-900 dark:text-gray-100 px-3 md:px-4 py-2 md:py-2.5 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+              <p className="whitespace-pre-wrap text-sm md:text-[15px] leading-relaxed">{message.content}</p>
             </div>
             <div className="flex items-center justify-end gap-2 mt-1 px-1">
               <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -371,21 +371,21 @@ function SearchResultCard({ result, onBook }: { result: SearchResult; onBook: (f
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ scale: 1.01 }}
-        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200 cursor-pointer"
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 md:p-4 hover:shadow-md hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200 cursor-pointer"
         onClick={handleBookClick}
       >
-        <div className="flex items-start gap-4">
-          <div className="p-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex-shrink-0">
-            <ExternalLink className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+        <div className="flex items-start gap-3 md:gap-4">
+          <div className="p-1.5 md:p-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 flex-shrink-0">
+            <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4 text-purple-600 dark:text-purple-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm line-clamp-1">{result.title}</h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">{result.subtitle}</p>
+            <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm line-clamp-1">{result.title}</h4>
+            <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 line-clamp-2 mt-1">{result.subtitle}</p>
             {result.details?.source && (
-              <p className="text-xs text-purple-500 dark:text-purple-400 mt-2">{result.details.source}</p>
+              <p className="text-[11px] md:text-xs text-purple-500 dark:text-purple-400 mt-2">{result.details.source}</p>
             )}
           </div>
-          <Button size="sm" variant="outline" className="rounded-lg text-xs px-3 flex-shrink-0" onClick={handleBookClick}>
+          <Button size="sm" variant="outline" className="rounded-lg text-[11px] md:text-xs px-2 md:px-3 flex-shrink-0" onClick={handleBookClick}>
             Read <ExternalLink className="h-3 w-3 ml-1" />
           </Button>
         </div>
@@ -398,71 +398,83 @@ function SearchResultCard({ result, onBook }: { result: SearchResult; onBook: (f
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ scale: 1.01 }}
-      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer"
+      className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-3 md:p-4 hover:shadow-md hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200 cursor-pointer"
       onClick={handleBookClick}
     >
       {isFlight ? (
         // Compact Flight Card with prominent timings
-        <div className="flex items-center gap-4">
-          {/* Airline Icon */}
-          <div className="p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex-shrink-0">
-            <Plane className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-          </div>
-
-          {/* Flight Times - Prominent */}
-          <div className="flex items-center gap-3 flex-1">
-            <div className="text-center">
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{departure || "N/A"}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{result.title.split("→")[0]?.trim()}</p>
+        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+          {/* Mobile: Top row with icon, times, and price */}
+          <div className="flex items-center gap-2 md:gap-4 flex-1">
+            {/* Airline Icon */}
+            <div className="p-1.5 md:p-2 rounded-lg bg-blue-50 dark:bg-blue-900/30 flex-shrink-0">
+              <Plane className="h-3.5 w-3.5 md:h-4 md:w-4 text-blue-600 dark:text-blue-400" />
             </div>
 
-            <div className="flex flex-col items-center flex-1 max-w-[100px]">
-              <p className="text-xs text-gray-400 dark:text-gray-500">{duration}</p>
-              <div className="relative w-full h-px bg-gray-300 dark:bg-gray-600 my-1">
-                <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 h-3 w-3 text-gray-400 dark:text-gray-500" />
+            {/* Flight Times - Prominent */}
+            <div className="flex items-center gap-2 md:gap-3 flex-1">
+              <div className="text-center">
+                <p className="text-base md:text-xl font-bold text-gray-900 dark:text-gray-100">{departure || "N/A"}</p>
+                <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate max-w-[60px] md:max-w-none">{result.title.split("→")[0]?.trim()}</p>
               </div>
-              <p className="text-xs text-gray-400 dark:text-gray-500">{stops}</p>
-            </div>
 
-            <div className="text-center">
-              <p className="text-xl font-bold text-gray-900 dark:text-gray-100">{arrival || "N/A"}</p>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{result.title.split("→")[1]?.trim()}</p>
+              <div className="flex flex-col items-center flex-1 max-w-[60px] md:max-w-[100px]">
+                <p className="text-[10px] md:text-xs text-gray-400 dark:text-gray-500 truncate">{duration}</p>
+                <div className="relative w-full h-px bg-gray-300 dark:bg-gray-600 my-0.5 md:my-1">
+                  <ArrowRight className="absolute right-0 top-1/2 -translate-y-1/2 h-2.5 w-2.5 md:h-3 md:w-3 text-gray-400 dark:text-gray-500" />
+                </div>
+                <p className="text-[10px] md:text-xs text-gray-400 dark:text-gray-500 truncate">{stops}</p>
+              </div>
+
+              <div className="text-center">
+                <p className="text-base md:text-xl font-bold text-gray-900 dark:text-gray-100">{arrival || "N/A"}</p>
+                <p className="text-[10px] md:text-xs text-gray-500 dark:text-gray-400 truncate max-w-[60px] md:max-w-none">{result.title.split("→")[1]?.trim()}</p>
+              </div>
             </div>
           </div>
 
-          {/* Airline & Flight */}
+          {/* Airline & Flight - Hidden on mobile, shown on desktop */}
           <div className="text-center flex-shrink-0 hidden sm:block">
             <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{result.subtitle}</p>
             <p className="text-xs text-gray-400 dark:text-gray-500">{flightNumber}</p>
           </div>
 
-          {/* Price & Book */}
-          <div className="flex items-center gap-3 flex-shrink-0">
-            <div className="text-right">
-              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">₹{result.price?.toLocaleString() || "N/A"}</p>
+          {/* Mobile: Bottom row with airline and price/book */}
+          <div className="flex items-center justify-between md:justify-end gap-3 md:gap-3 md:flex-shrink-0">
+            {/* Airline info - only on mobile */}
+            <div className="sm:hidden text-left flex-1">
+              <p className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate">{result.subtitle}</p>
+              <p className="text-[10px] text-gray-400 dark:text-gray-500">{flightNumber}</p>
             </div>
-            <Button size="sm" className="rounded-lg text-xs px-3" onClick={handleBookClick}>
-              Book <ArrowRight className="h-3 w-3 ml-1" />
-            </Button>
+
+            {/* Price & Book */}
+            <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
+              <div className="text-right">
+                <p className="text-base md:text-lg font-bold text-blue-600 dark:text-blue-400">₹{result.price?.toLocaleString() || "N/A"}</p>
+              </div>
+              <Button size="sm" className="rounded-lg text-[11px] md:text-xs px-2 md:px-3" onClick={handleBookClick}>
+                Book <ArrowRight className="h-3 w-3 ml-0.5 md:ml-1" />
+              </Button>
+            </div>
           </div>
         </div>
       ) : (
         // Hotel Card (compact design)
-        <div className="flex items-center gap-4">
-          <div className="p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex-shrink-0">
-            <Hotel className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+        <div className="flex items-center gap-3 md:gap-4">
+          <div className="p-1.5 md:p-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/30 flex-shrink-0">
+            <Hotel className="h-3.5 w-3.5 md:h-4 md:w-4 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="flex-1 min-w-0">
-            <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm truncate">{result.title}</h4>
-            <p className="text-xs text-gray-500 dark:text-gray-400">{result.subtitle}</p>
+            <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-xs md:text-sm truncate">{result.title}</h4>
+            <p className="text-[11px] md:text-xs text-gray-500 dark:text-gray-400 truncate">{result.subtitle}</p>
           </div>
-          <div className="flex items-center gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 md:gap-3 flex-shrink-0">
             <div className="text-right">
-              <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">₹{result.price?.toLocaleString() || "N/A"}</p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">per night</p>
+              <p className="text-base md:text-lg font-bold text-emerald-600 dark:text-emerald-400">₹{result.price?.toLocaleString() || "N/A"}</p>
+              <p className="text-[10px] md:text-xs text-gray-400 dark:text-gray-500">per night</p>
             </div>
-            <Button size="sm" className="rounded-lg text-xs px-3" onClick={handleBookClick}>
-              Book <ArrowRight className="h-3 w-3 ml-1" />
+            <Button size="sm" className="rounded-lg text-[11px] md:text-xs px-2 md:px-3" onClick={handleBookClick}>
+              Book <ArrowRight className="h-3 w-3 ml-0.5 md:ml-1" />
             </Button>
           </div>
         </div>
