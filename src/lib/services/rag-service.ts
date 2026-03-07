@@ -39,10 +39,10 @@ export interface RAGDocument {
 }
 
 /**
- * Generate embeddings using Gemini text-embedding-004
+ * Generate embeddings using Gemini embedding-001
  */
 export async function generateEmbedding(text: string): Promise<number[]> {
-  const model = genAI.getGenerativeModel({ model: "text-embedding-004" });
+  const model = genAI.getGenerativeModel({ model: "embedding-001" });
   const result = await model.embedContent(text);
   return result.embedding.values;
 }

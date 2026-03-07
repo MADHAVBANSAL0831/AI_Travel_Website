@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS rag_chunks (
   document_id UUID REFERENCES rag_documents(id) ON DELETE CASCADE,
   chunk_index INTEGER NOT NULL,
   content TEXT NOT NULL,
-  embedding vector(768), -- Gemini text-embedding-004 produces 768-dim vectors
+  embedding vector(768), -- Gemini embedding-001 produces 768-dim vectors
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
